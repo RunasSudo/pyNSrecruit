@@ -18,16 +18,32 @@
 from tkinter import *
 from tkinter.ttk import *
 
-root = Tk()
-Style().theme_use("clam")
+# =========================== DEBUG SECTION ===========================
+DEBUG = False
+if DEBUG:
+	Frame = LabelFrame
 
-frmTop = Frame(root)
+class Frame(Frame): #Magic.
+	def __init__(self, master=None, **options):
+		if DEBUG and "dname" in options:
+			options["text"] = options["dname"]
+		options.pop("dname", None)
+		super(Frame, self).__init__(master, **options)
+
+# ============================= GUI LAYOUT =============================
+
+root = Tk()
+#Style().theme_use("clam")
+
+frmTop = Frame(root, dname="frmTop")
 frmTop.pack(side=TOP, fill=BOTH)
 
-frmLeft = Frame(frmTop)
+frmLeft = Frame(frmTop, dname="frmLeft")
 frmLeft.pack(side=LEFT, fill=BOTH)
 
-frmCampaigns = Frame(frmLeft)
+# --------------------------- CAMPAIGNS BOX ---------------------------
+
+frmCampaigns = Frame(frmLeft, dname="frmCampaigns")
 frmCampaigns.pack(side=TOP, fill=BOTH, expand=YES)
 
 sbCampaigns = Scrollbar(frmCampaigns)
@@ -41,7 +57,7 @@ for num in range(0, 10):
 
 lbCampaigns.itemconfig(1, fg="#AAAAAA")
 
-frmCampaignsSL = Frame(frmLeft)
+frmCampaignsSL = Frame(frmLeft, dname="frmCampaignsSL")
 frmCampaignsSL.pack(side=BOTTOM)
 
 btnSave = Button(frmCampaignsSL, text="Save")
@@ -53,14 +69,50 @@ btnLoad.pack(side=LEFT)
 btnDelete = Button(frmCampaignsSL, text="Delete")
 btnDelete.pack(side=LEFT)
 
-frmDetails = Frame(frmTop, height=500, width=500)
-frmDetails.pack_propagate(0)
-frmDetails.pack(side=RIGHT, fill=X, expand=YES)
+# -------------------------- CAMPAIGN DETAILS --------------------------
 
-frmBottom = Frame(root)
+frmDetails = Frame(frmTop, height=500, width=500, dname="frmDetails")
+frmDetails.pack_propagate(0)
+frmDetails.pack(side=RIGHT, fill=BOTH)
+
+#                            CAMPAIGN FILTERS                           
+
+frmFilters = Frame(frmDetails, dname="frmFilters")
+frmFilters.pack(side=TOP, fill=X)
+
+Label(frmFilters, text="Filter Targets").pack(side=TOP, anchor=W)
+
+frmFilterControls = Frame(frmFilters, dname="frmFilterControls")
+frmFilterControls.pack(side=RIGHT)
+
+btnFilterAdd = Button(frmFilterControls, text="+", width=2)
+btnFilterAdd.pack(side=TOP)
+
+btnFilterRemove = Button(frmFilterControls, text="−", width=2)
+btnFilterRemove.pack(side=TOP)
+
+btnFilterShiftUp = Button(frmFilterControls, text="▲", width=2)
+btnFilterShiftUp.pack(side=TOP)
+
+btnFilterShiftDown = Button(frmFilterControls, text="▼", width=2)
+btnFilterShiftDown.pack(side=TOP)
+
+sbFilters = Scrollbar(frmFilters)
+sbFilters.pack(side=RIGHT, fill=Y)
+lbFilters = Listbox(frmFilters, yscrollcommand=sbFilters.set)
+lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
+sbFilters.config(command=lbCampaigns.yview)
+
+#                             OTHER SETTINGS                            
+
+Label(frmDetails, text="Telegram Settings").pack(side=TOP, anchor=W)
+
+# ---------------------------- BOTTOM PANEL ----------------------------
+
+frmBottom = Frame(root, dname="frmBottom")
 frmBottom.pack(side=BOTTOM, fill=X)
 
-frmControls = Frame(frmBottom)
+frmControls = Frame(frmBottom, dname="frmControls")
 frmControls.pack(side=LEFT)
 
 btnStart = Button(frmControls, text="Start")
@@ -69,7 +121,7 @@ btnStart.pack(side=TOP)
 btnStop = Button(frmControls, text="Stop")
 btnStop.pack(side=TOP)
 
-frmLog = Frame(frmBottom)
+frmLog = Frame(frmBottom, dname="frmLog")
 frmLog.pack(side=RIGHT, fill=X, expand=YES)
 
 txtLog = Text(frmLog, height=4)
