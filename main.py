@@ -136,19 +136,41 @@ lbFilters.insert(END, "Exclude Classification 'Psychotic Dictatorship'")
 
 #                             OTHER SETTINGS                            
 
-frmTelegramSettings = LabelFrame(frmDetails, text="Telegram Settings")
+frmClientOptions = LabelFrame(frmDetails, text="Client Options")
+frmClientOptions.pack(side=TOP, fill=X)
+
+txtClientKey = makeLabelledText(frmClientOptions, "Client Key:")
+
+frmTelegramSettings = LabelFrame(frmDetails, text="Telegram Details")
 frmTelegramSettings.pack(side=TOP, fill=X)
 
-txtClientKey = makeLabelledText(frmTelegramSettings, "Client Key:")
 txtTelegramID = makeLabelledText(frmTelegramSettings, "Telegram ID:")
 txtSecretKey = makeLabelledText(frmTelegramSettings, "Secret Key:")
 
 btnGetFromURL = Button(frmTelegramSettings, text="Get Settings from URL")
 btnGetFromURL.pack(side=TOP, fill=X)
 
+frmSendingRate = LabelFrame(frmDetails, text="Sending Rate")
+frmSendingRate.pack(side=TOP, fill=X)
+
+varSendingRate = IntVar()
+varSendingRate.set(180)
+Radiobutton(frmSendingRate, text="30s (Non-Recruitment Telegram)", variable=varSendingRate, value=30).pack(side=TOP, anchor=W)
+Radiobutton(frmSendingRate, text="180s (Recruitment Telegram)", variable=varSendingRate, value=180).pack(side=TOP, anchor=W)
+
+frmCustomRate = Frame(frmSendingRate)
+frmCustomRate.pack(side=TOP, anchor=W)
+
+Radiobutton(frmCustomRate, text="Custom Rate:", variable=varSendingRate, value=0).pack(side=LEFT)
+
+txtCustomRate = Text(frmCustomRate, height=1, width=3)
+txtCustomRate.pack(side=LEFT)
+
+Label(frmCustomRate, text="s").pack(side=LEFT)
+
 varCampaignEnabled = IntVar()
 varCampaignEnabled.set(1)
-Checkbutton(frmTelegramSettings, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
+Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
 
 # ---------------------------- BOTTOM PANEL ----------------------------
 
