@@ -101,9 +101,10 @@ frmDetails.pack(side=RIGHT, fill=BOTH)
 frmFilters = Frame(frmDetails, dname="frmFilters")
 frmFilters.pack(side=TOP, fill=X)
 
-Label(frmFilters, text="Filter Targets").pack(side=TOP, anchor=W)
+frmFilterTargets = LabelFrame(frmDetails, text="Filter Targets")
+frmFilterTargets.pack(side=TOP, fill=X)
 
-frmFilterControls = Frame(frmFilters, dname="frmFilterControls")
+frmFilterControls = Frame(frmFilterTargets, dname="frmFilterControls")
 frmFilterControls.pack(side=RIGHT)
 
 btnFilterAdd = Button(frmFilterControls, text="+", width=2)
@@ -122,9 +123,9 @@ def fnFilterShiftDown():
 btnFilterShiftDown = Button(frmFilterControls, text="▼", width=2, command=fnFilterShiftDown)
 btnFilterShiftDown.pack(side=TOP)
 
-sbFilters = Scrollbar(frmFilters)
+sbFilters = Scrollbar(frmFilterTargets)
 sbFilters.pack(side=RIGHT, fill=Y)
-lbFilters = Listbox(frmFilters, yscrollcommand=sbFilters.set)
+lbFilters = Listbox(frmFilterTargets, yscrollcommand=sbFilters.set)
 lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
 sbFilters.config(command=lbCampaigns.yview)
 
@@ -134,18 +135,19 @@ lbFilters.insert(END, "Exclude Classification 'Psychotic Dictatorship'")
 
 #                             OTHER SETTINGS                            
 
-Label(frmDetails, text="Telegram Settings").pack(side=TOP, anchor=W)
+frmTelegramSettings = LabelFrame(frmDetails, text="Telegram Settings")
+frmTelegramSettings.pack(side=TOP, fill=X)
 
-txtClientKey = makeLabelledText(frmDetails, "Client Key:")
-txtTelegramID = makeLabelledText(frmDetails, "Telegram ID:")
-txtSecretKey = makeLabelledText(frmDetails, "Secret Key:")
+txtClientKey = makeLabelledText(frmTelegramSettings, "Client Key:")
+txtTelegramID = makeLabelledText(frmTelegramSettings, "Telegram ID:")
+txtSecretKey = makeLabelledText(frmTelegramSettings, "Secret Key:")
 
-btnGetFromURL = Button(frmDetails, text="Get Settings from URL")
+btnGetFromURL = Button(frmTelegramSettings, text="Get Settings from URL")
 btnGetFromURL.pack(side=TOP, fill=X)
 
 varCampaignEnabled = IntVar()
 varCampaignEnabled.set(1)
-Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
+Checkbutton(frmTelegramSettings, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
 
 # ---------------------------- BOTTOM PANEL ----------------------------
 
