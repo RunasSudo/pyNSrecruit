@@ -30,6 +30,16 @@ class Frame(Frame): #Magic.
 		options.pop("dname", None)
 		super(Frame, self).__init__(master, **options)
 
+# =========================== GUI FUNCTIONS ===========================
+def lbShift(listbox, offset):
+	if len(listbox.curselection()) > 0:
+		selection = listbox.curselection()[0]
+		if selection + offset >= 0 and selection + offset < listbox.size():
+			text = listbox.get(selection)
+			listbox.delete(selection)
+			listbox.insert(selection + offset, text)
+			listbox.selection_set(selection + offset)
+
 # ============================= GUI LAYOUT =============================
 
 root = Tk()
@@ -91,10 +101,14 @@ btnFilterAdd.pack(side=TOP)
 btnFilterRemove = Button(frmFilterControls, text="−", width=2)
 btnFilterRemove.pack(side=TOP)
 
-btnFilterShiftUp = Button(frmFilterControls, text="▲", width=2)
+def fnFilterShiftUp():
+	lbShift(lbFilters, -1)
+btnFilterShiftUp = Button(frmFilterControls, text="▲", width=2, command=fnFilterShiftUp)
 btnFilterShiftUp.pack(side=TOP)
 
-btnFilterShiftDown = Button(frmFilterControls, text="▼", width=2)
+def fnFilterShiftDown():
+	lbShift(lbFilters, 1)
+btnFilterShiftDown = Button(frmFilterControls, text="▼", width=2, command=fnFilterShiftDown)
 btnFilterShiftDown.pack(side=TOP)
 
 sbFilters = Scrollbar(frmFilters)
@@ -102,6 +116,10 @@ sbFilters.pack(side=RIGHT, fill=Y)
 lbFilters = Listbox(frmFilters, yscrollcommand=sbFilters.set)
 lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
 sbFilters.config(command=lbCampaigns.yview)
+
+lbFilters.insert(END, "Include Recently Founded")
+lbFilters.insert(END, "Exclude Regions 'arnhelm_signatory_1', 'Arnhelm Signatory 2'")
+lbFilters.insert(END, "Exclude Classification 'Psychotic Dictatorship'")
 
 #                             OTHER SETTINGS                            
 
