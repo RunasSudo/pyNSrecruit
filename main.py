@@ -54,10 +54,11 @@ def makeLabelledText(master, label):
 # ============================= GUI LAYOUT =============================
 
 root = Tk()
+root.wm_title("pyNSrecruit")
 #Style().theme_use("clam")
 
 frmTop = Frame(root, dname="frmTop")
-frmTop.pack(side=TOP, fill=BOTH)
+frmTop.pack(side=TOP, fill=BOTH, expand=YES)
 
 frmLeft = Frame(frmTop, dname="frmLeft")
 frmLeft.pack(side=LEFT, fill=BOTH)
