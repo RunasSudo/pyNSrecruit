@@ -28,7 +28,7 @@ class Frame(Frame): #Magic.
 		if DEBUG and "dname" in options:
 			options["text"] = options["dname"]
 		options.pop("dname", None)
-		super(Frame, self).__init__(master, **options)
+		super().__init__(master, **options)
 
 # =========================== GUI FUNCTIONS ===========================
 def lbShift(listbox, offset):
@@ -39,6 +39,17 @@ def lbShift(listbox, offset):
 			listbox.delete(selection)
 			listbox.insert(selection + offset, text)
 			listbox.selection_set(selection + offset)
+
+def makeLabelledText(master, label):
+	frmContainer = Frame(master)
+	frmContainer.pack(side=TOP)
+	
+	Label(frmContainer, text=label).pack(side=LEFT)
+	
+	txtText = Text(frmContainer, height=1)
+	txtText.pack(side=LEFT)
+	
+	return txtText
 
 # ============================= GUI LAYOUT =============================
 
@@ -124,6 +135,17 @@ lbFilters.insert(END, "Exclude Classification 'Psychotic Dictatorship'")
 #                             OTHER SETTINGS                            
 
 Label(frmDetails, text="Telegram Settings").pack(side=TOP, anchor=W)
+
+txtClientKey = makeLabelledText(frmDetails, "Client Key:")
+txtTelegramID = makeLabelledText(frmDetails, "Telegram ID:")
+txtSecretKey = makeLabelledText(frmDetails, "Secret Key:")
+
+btnGetFromURL = Button(frmDetails, text="Get Settings from URL")
+btnGetFromURL.pack(side=TOP, fill=X)
+
+varCampaignEnabled = IntVar()
+varCampaignEnabled.set(1)
+Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
 
 # ---------------------------- BOTTOM PANEL ----------------------------
 
