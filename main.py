@@ -76,7 +76,26 @@ class TargetFilter:
 	def __str__(self):
 		return "Unknown filter"
 	def filterType(self):
-		return 0 #1=EXCLUDE, 2=INCLUDE
+		return 0
+	
+	def configureCallback(self):
+		return
+	
+	def configure(self, callback):
+		top = Toplevel()
+		top.wm_title("Configure Filter")
+		
+		frmButtons = Frame(top)
+		frmButtons.pack(side=BOTTOM)
+		
+		def fnConfirm():
+			self.configureCallback()
+			callback(self)
+			top.destroy()
+		Button(frmButtons, text="OK", command=fnConfirm).pack(side=LEFT)
+		Button(frmButtons, text="Cancel", command=top.destroy).pack(side=LEFT)
+		
+		return top
 
 class FilterIncludeName(TargetFilter):
 	def __init__(self, names):
@@ -85,6 +104,16 @@ class FilterIncludeName(TargetFilter):
 		return "Include nations {0}".format(self.names)
 	def filterType(self):
 		return TargetFilter.FILTER_INCLUDE
+	
+	def configureCallback(self):
+		self.names = self.txtNames.get(1.0, END).rstrip().split("\n")
+		
+	def configure(self, callback):
+		top = super().configure(callback)
+		
+		Label(top, text="Nation names: (one per line)").pack(side=TOP, anchor=W)
+		self.txtNames = ScrolledText(top, height=6)
+		self.txtNames.pack(side=TOP, fill=X)
 
 isTelegramming = False
 
@@ -137,15 +166,6 @@ def fnStop():
 
 # -------------------------- CONFIGURE FILTER --------------------------
 
-def fnFilterConfigure(theFilter, callback):
-	top = Toplevel()
-	top.wm_title("Configure Filter")
-	
-	def fnConfirm():
-		callback(theFilter)
-		top.destroy()
-	Button(top, text="Magic!", command=fnConfirm).pack()
-
 def fnFilterAddCallback(theFilter):
 	listFilters.append(theFilter)
 	lbFilters.insert(END, theFilter)
@@ -184,10 +204,7 @@ def fnFilterAdd():
 		theFilter = None
 		
 		if varFilterMode.get() == "Include" and varFilterType.get() == "By Name":
-			theFilter = FilterIncludeName(["North Jarvis", "Greater Southeast Jarvis"])
-		
-		if theFilter:
-			fnFilterConfigure(theFilter, fnFilterAddCallback)
+			FilterIncludeName(["North Jarvis", "Greater Southeast Jarvis"]).configure(fnFilterAddCallback)
 		
 		top.destroy()
 	
