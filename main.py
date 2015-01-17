@@ -82,8 +82,21 @@ def log(level, text):
 # ============================== THE GUTS ==============================
 
 class TargetFilter:
+	FILTER_EXCLUDE = 1
+	FILTER_INCLUDE = 2
+	
 	def __str__(self):
 		return "Unknown filter"
+	def filterType(self):
+		return 0 #1=EXCLUDE, 2=INCLUDE
+
+class FilterIncludeName(TargetFilter):
+	def __init__(self, names):
+		self.names = names
+	def __str__(self):
+		return "Include nations {0}".format(self.names)
+	def filterType(self):
+		return TargetFilter.FILTER_INCLUDE
 
 isTelegramming = False
 
@@ -144,6 +157,54 @@ def fnFilterConfigure(theFilter, callback):
 		callback(theFilter)
 		top.destroy()
 	Button(top, text="Magic!", command=fnConfirm).pack()
+
+def fnFilterAddCallback(theFilter):
+	listFilters.append(theFilter)
+	lbFilters.insert(END, theFilter)
+
+def fnFilterAdd():
+	top = Toplevel()
+	top.wm_title("Select Filter Type")
+	
+	varFilterMode = StringVar()
+	varFilterMode.set("")
+	optFilterMode = OptionMenu(top, varFilterMode, "", "", "Include", "Exclude")
+	optFilterMode.pack(side=TOP, fill=X)
+	
+	varFilterType = StringVar()
+	varFilterType.set("")
+	optFilterType = OptionMenu(top, varFilterType, "", "")
+	optFilterType.config(state=DISABLED)
+	optFilterType.pack(side=TOP, fill=X)
+	
+	def fnChangeFilterMode(*args):
+		optFilterType["menu"].delete(0, END)
+		varFilterType.set("")
+		if varFilterMode.get() == "":
+			optFilterType.config(state=DISABLED)
+		else:
+			optFilterType.config(state=NORMAL)
+			if varFilterMode.get() == "Include":
+				optFilterType["menu"].add_command(label="By Name", command=tkinter._setit(varFilterType, "By Name"))
+	
+	varFilterMode.trace("w", fnChangeFilterMode)
+	
+	frmButtons = Frame(top)
+	frmButtons.pack(side=BOTTOM)
+	
+	def fnConfirm():
+		theFilter = None
+		
+		if varFilterMode.get() == "Include" and varFilterType.get() == "By Name":
+			theFilter = FilterIncludeName(["North Jarvis", "Greater Southeast Jarvis"])
+		
+		if theFilter:
+			fnFilterConfigure(theFilter, fnFilterAddCallback)
+		
+		top.destroy()
+	
+	Button(frmButtons, text="OK", command=fnConfirm).pack(side=LEFT)
+	Button(frmButtons, text="Cancel", command=top.destroy).pack(side=LEFT)
 
 # ============================= GUI LAYOUT =============================
 
@@ -210,21 +271,11 @@ frmDetails.pack(side=RIGHT, fill=BOTH)
 
 #                            CAMPAIGN FILTERS                           
 
-frmFilters = Frame(frmDetails, dname="frmFilters")
-frmFilters.pack(side=TOP, fill=X)
-
 frmFilterTargets = LabelFrame(frmDetails, text="Filter Targets")
 frmFilterTargets.pack(side=TOP, fill=X)
 
 frmFilterControls = Frame(frmFilterTargets, dname="frmFilterControls")
 frmFilterControls.pack(side=RIGHT)
-
-def fnFilterAddCallback(theFilter):
-	listFilters.append(theFilter)
-	lbFilters.insert(END, theFilter)
-
-def fnFilterAdd():
-	fnFilterConfigure(TargetFilter(), fnFilterAddCallback)
 
 btnFilterAdd = Button(frmFilterControls, text="+", width=2, command=fnFilterAdd)
 btnFilterAdd.pack(side=TOP)
