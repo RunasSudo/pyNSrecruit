@@ -50,7 +50,7 @@ def lbShift(listbox, listdata, offset):
 			listdata.pop(selection)
 			
 			listbox.insert(selection + offset, data)
-			data.insert(selection + offset, data)
+			listdata.insert(selection + offset, data)
 			
 			listbox.selection_set(selection + offset)
 
@@ -132,6 +132,13 @@ def fnStop():
 	
 	#Wait for stop.
 
+# ========================= GUI CHILD WINDOWS =========================
+
+# -------------------------- CONFIGURE FILTER --------------------------
+
+def fnFilterConfigure(theFilter, callback):
+	callback(theFilter)
+
 # ============================= GUI LAYOUT =============================
 
 root = Tk()
@@ -206,10 +213,23 @@ frmFilterTargets.pack(side=TOP, fill=X)
 frmFilterControls = Frame(frmFilterTargets, dname="frmFilterControls")
 frmFilterControls.pack(side=RIGHT)
 
-btnFilterAdd = Button(frmFilterControls, text="+", width=2, state=DISABLED)
+def fnFilterAddCallback(theFilter):
+	listFilters.append(theFilter)
+	lbFilters.insert(END, theFilter)
+
+def fnFilterAdd():
+	fnFilterConfigure(TargetFilter(), fnFilterAddCallback)
+
+btnFilterAdd = Button(frmFilterControls, text="+", width=2, command=fnFilterAdd)
 btnFilterAdd.pack(side=TOP)
 
-btnFilterRemove = Button(frmFilterControls, text="−", width=2, state=DISABLED)
+def fnFilterRemove():
+	if len(lbFilters.curselection()) > 0:
+		selection = lbFilters.curselection()[0]
+		lbFilters.delete(selection)
+		listFilters.pop(selection)
+
+btnFilterRemove = Button(frmFilterControls, text="−", width=2, command=fnFilterRemove)
 btnFilterRemove.pack(side=TOP)
 
 def fnFilterShiftUp():
@@ -227,10 +247,6 @@ sbFilters.pack(side=RIGHT, fill=Y)
 lbFilters = Listbox(frmFilterTargets, yscrollcommand=sbFilters.set)
 lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
 sbFilters.config(command=lbCampaigns.yview)
-
-tmp = TargetFilter()
-lbFilters.insert(END, tmp)
-listFilters.append(tmp)
 
 #                             OTHER SETTINGS                            
 
