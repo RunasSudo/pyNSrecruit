@@ -137,7 +137,13 @@ def fnStop():
 # -------------------------- CONFIGURE FILTER --------------------------
 
 def fnFilterConfigure(theFilter, callback):
-	callback(theFilter)
+	top = Toplevel()
+	top.wm_title("Configure Filter")
+	
+	def fnConfirm():
+		callback(theFilter)
+		top.destroy()
+	Button(top, text="Magic!", command=fnConfirm).pack()
 
 # ============================= GUI LAYOUT =============================
 
