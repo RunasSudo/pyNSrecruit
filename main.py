@@ -17,10 +17,12 @@
 
 from tkinter import *
 from tkinter.ttk import *
+import tkinter.filedialog
 import tkinter.simpledialog
 from tkinter.scrolledtext import ScrolledText
 
 import datetime
+import json
 import threading
 import traceback
 import urllib.parse
@@ -78,6 +80,18 @@ class TargetFilter:
 	def filterType(self):
 		return 0
 	
+	def toDict(self):
+		return []
+	def fromDict(data):
+		return TargetFilter()
+	
+	def getTypeString(typeString):
+		return "TargetFilter"
+	def getTypeFromString(typeString):
+		if typeString == "FilterIncludeName":
+			return FilterIncludeName
+		return TargetFilter
+	
 	def configureCallback(self):
 		return
 	
@@ -104,6 +118,15 @@ class FilterIncludeName(TargetFilter):
 		return "Include nations {0}".format(self.names)
 	def filterType(self):
 		return TargetFilter.FILTER_INCLUDE
+	
+	def toDict(self):
+		return {
+			"names": self.names
+		}
+	def fromDict(data):
+		return FilterIncludeName(data["names"])
+	def getTypeString(typeString):
+		return "FilterIncludeName"
 	
 	def configureCallback(self):
 		self.names = self.txtNames.get(1.0, END).rstrip().split("\n")
@@ -222,8 +245,59 @@ root.wm_title("pyNSrecruit")
 menubar = Menu(root)
 
 menuFile = Menu(menubar, tearoff=0)
-menuFile.add_command(label="Save", state=DISABLED)
-menuFile.add_command(label="Load", state=DISABLED)
+
+def fnMenuSave():
+	filename = tkinter.filedialog.asksaveasfilename(parent=root)
+	if filename:
+		try:
+			data = {"version": 1}
+			data["campaigns"] = []
+			data["campaigns"].append({})
+			data["campaigns"][0]["filters"] = []
+			for theFilter in listFilters:
+				filterDict = theFilter.toDict()
+				filterDict["type"] = theFilter.getTypeString()
+				data["campaigns"][0]["filters"].append(filterDict)
+			
+			with open(filename, "w") as fHandle:
+				json.dump(data, fHandle)
+			
+			log(INFO, "Saved session data.")
+		except Exception as e:
+			log(ERRR, "An error occurred while saving session data. Check the log.\n{0}".format(repr(e)))
+			print(traceback.format_exc())
+
+menuFile.add_command(label="Save", command=fnMenuSave)
+
+def fnMenuLoad():
+	filename = tkinter.filedialog.askopenfilename(parent=root)
+	if filename:
+		try:
+			with open(filename, "r") as fHandle:
+				data = json.load(fHandle)
+			
+			if data["version"] != 1:
+				log(ERRR, "Unsupported version number {0}.".format(data.version))
+				return
+			
+			#Clear the filter data.
+			for i in range(0, len(listFilters)):
+				lbFilters.delete(i)
+				listFilters.pop(i)
+			
+			for filterDict in data["campaigns"][0]["filters"]:
+				filterType = TargetFilter.getTypeFromString(filterDict["type"])
+				theFilter = filterType.fromDict(filterDict)
+				
+				lbFilters.insert(END, theFilter)
+				listFilters.append(theFilter)
+			
+			log(INFO, "Loaded session data.")
+		except Exception as e:
+			log(ERRR, "An error occurred while loading session data. Check the log.\n{0}".format(repr(e)))
+			print(traceback.format_exc())
+
+menuFile.add_command(label="Load", command=fnMenuLoad)
 menuFile.add_separator()
 menuFile.add_command(label="Quit", command=root.quit)
 menubar.add_cascade(label="File", menu=menuFile)
