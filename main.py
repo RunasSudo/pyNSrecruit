@@ -27,18 +27,6 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
-# =========================== DEBUG SECTION ===========================
-DEBUG = False
-if DEBUG:
-	Frame = LabelFrame
-
-class Frame(Frame): #Magic.
-	def __init__(self, master=None, **options):
-		if DEBUG and "dname" in options:
-			options["text"] = options["dname"]
-		options.pop("dname", None)
-		super().__init__(master, **options)
-
 # =========================== GUI FUNCTIONS ===========================
 def lbShift(listbox, listdata, offset):
 	if len(listbox.curselection()) > 0:
@@ -232,15 +220,15 @@ menubar.add_cascade(label="Help", menu=menuHelp)
 
 root.config(menu=menubar)
 
-frmTop = Frame(root, dname="frmTop")
+frmTop = Frame(root)
 frmTop.pack(side=TOP, fill=BOTH, expand=YES)
 
-frmLeft = Frame(frmTop, dname="frmLeft")
+frmLeft = Frame(frmTop)
 frmLeft.pack(side=LEFT, fill=BOTH)
 
 # --------------------------- CAMPAIGNS BOX ---------------------------
 
-frmCampaigns = Frame(frmLeft, dname="frmCampaigns")
+frmCampaigns = Frame(frmLeft)
 frmCampaigns.pack(side=TOP, fill=BOTH, expand=YES)
 
 sbCampaigns = Scrollbar(frmCampaigns)
@@ -251,7 +239,7 @@ sbCampaigns.config(command=lbCampaigns.yview)
 
 #lbCampaigns.itemconfig(1, fg="#AAAAAA")
 
-frmCampaignsSL = Frame(frmLeft, dname="frmCampaignsSL")
+frmCampaignsSL = Frame(frmLeft)
 frmCampaignsSL.pack(side=BOTTOM)
 
 btnSave = Button(frmCampaignsSL, text="Save", state=DISABLED)
@@ -265,7 +253,7 @@ btnDelete.pack(side=LEFT)
 
 # -------------------------- CAMPAIGN DETAILS --------------------------
 
-frmDetails = Frame(frmTop, height=500, width=500, dname="frmDetails")
+frmDetails = Frame(frmTop, height=500, width=500)
 frmDetails.pack_propagate(0)
 frmDetails.pack(side=RIGHT, fill=BOTH)
 
@@ -274,7 +262,7 @@ frmDetails.pack(side=RIGHT, fill=BOTH)
 frmFilterTargets = LabelFrame(frmDetails, text="Filter Targets")
 frmFilterTargets.pack(side=TOP, fill=X)
 
-frmFilterControls = Frame(frmFilterTargets, dname="frmFilterControls")
+frmFilterControls = Frame(frmFilterTargets)
 frmFilterControls.pack(side=RIGHT)
 
 btnFilterAdd = Button(frmFilterControls, text="+", width=2, command=fnFilterAdd)
@@ -366,10 +354,10 @@ Checkbutton(frmDetails, text="Dry Run (Don't actually send any telegrams)", vari
 
 # ---------------------------- BOTTOM PANEL ----------------------------
 
-frmBottom = Frame(root, dname="frmBottom")
+frmBottom = Frame(root)
 frmBottom.pack(side=BOTTOM, fill=X)
 
-frmControls = Frame(frmBottom, dname="frmControls")
+frmControls = Frame(frmBottom)
 frmControls.pack(side=LEFT)
 
 btnStart = Button(frmControls, text="Start", command=fnStart)
@@ -378,7 +366,7 @@ btnStart.pack(side=TOP)
 btnStop = Button(frmControls, text="Stop", command=fnStop, state=DISABLED)
 btnStop.pack(side=TOP)
 
-frmLog = Frame(frmBottom, dname="frmLog")
+frmLog = Frame(frmBottom)
 frmLog.pack(side=RIGHT, fill=X, expand=YES)
 
 txtLog = ScrolledText(frmLog, height=4)
