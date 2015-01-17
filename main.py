@@ -18,8 +18,11 @@
 from tkinter import *
 from tkinter.ttk import *
 import tkinter.simpledialog
+from tkinter.scrolledtext import ScrolledText
 
+import datetime
 import urllib.parse
+import webbrowser
 
 # =========================== DEBUG SECTION ===========================
 DEBUG = False
@@ -54,6 +57,37 @@ def makeLabelledText(master, label):
 	
 	return txtText
 
+#                                LOGGING                               
+
+INFO = (0, "INFO")
+WARN = (1, "WARN")
+ERRR = (2, "ERRR")
+CRIT = (3, "CRIT")
+FTAL = (4, "FTAL")
+
+def log(level, text):
+	formatted = "{0:%Y-%m-%d %H:%M:%S} [{1}] {2}".format(datetime.datetime.now(), level[1], text)
+	print(formatted)
+	txtLog.insert(END, formatted + "\n")
+	txtLog.yview(END)
+
+# ============================== THE GUTS ==============================
+
+startedTelegramming = False
+
+def fnStart():
+	log(INFO, "Started telegramming.")
+	startedTelegramming = True
+	btnStart.config(state=DISABLED)
+	btnStop.config(state=NORMAL)
+
+def fnStop():
+	log(INFO, "Stopping telegramming.")
+	startedTelegramming = False
+	btnStart.config(state=NORMAL)
+	btnStop.config(state=DISABLED)
+	log(INFO, "Stopped telegramming.")
+
 # ============================= GUI LAYOUT =============================
 
 root = Tk()
@@ -65,15 +99,17 @@ root.wm_title("pyNSrecruit")
 menubar = Menu(root)
 
 menuFile = Menu(menubar, tearoff=0)
-menuFile.add_command(label="Save")
-menuFile.add_command(label="Load")
+menuFile.add_command(label="Save", state=DISABLED)
+menuFile.add_command(label="Load", state=DISABLED)
 menuFile.add_separator()
 menuFile.add_command(label="Quit", command=root.quit)
 menubar.add_cascade(label="File", menu=menuFile)
 
 menuHelp = Menu(menubar, tearoff=0)
-menuHelp.add_command(label="Online Help")
-menuHelp.add_command(label="About")
+def fnMenuHelp():
+	webbrowser.open("https://github.com/RunasSudo/pyNSrecruit/wiki")
+menuHelp.add_command(label="Online Help", command=fnMenuHelp)
+menuHelp.add_command(label="About", state=DISABLED)
 menubar.add_cascade(label="Help", menu=menuHelp)
 
 root.config(menu=menubar)
@@ -100,13 +136,13 @@ sbCampaigns.config(command=lbCampaigns.yview)
 frmCampaignsSL = Frame(frmLeft, dname="frmCampaignsSL")
 frmCampaignsSL.pack(side=BOTTOM)
 
-btnSave = Button(frmCampaignsSL, text="Save")
+btnSave = Button(frmCampaignsSL, text="Save", state=DISABLED)
 btnSave.pack(side=LEFT)
 
-btnLoad = Button(frmCampaignsSL, text="Load")
+btnLoad = Button(frmCampaignsSL, text="Load", state=DISABLED)
 btnLoad.pack(side=LEFT)
 
-btnDelete = Button(frmCampaignsSL, text="Delete")
+btnDelete = Button(frmCampaignsSL, text="Delete", state=DISABLED)
 btnDelete.pack(side=LEFT)
 
 # -------------------------- CAMPAIGN DETAILS --------------------------
@@ -126,10 +162,10 @@ frmFilterTargets.pack(side=TOP, fill=X)
 frmFilterControls = Frame(frmFilterTargets, dname="frmFilterControls")
 frmFilterControls.pack(side=RIGHT)
 
-btnFilterAdd = Button(frmFilterControls, text="+", width=2)
+btnFilterAdd = Button(frmFilterControls, text="+", width=2, state=DISABLED)
 btnFilterAdd.pack(side=TOP)
 
-btnFilterRemove = Button(frmFilterControls, text="−", width=2)
+btnFilterRemove = Button(frmFilterControls, text="−", width=2, state=DISABLED)
 btnFilterRemove.pack(side=TOP)
 
 def fnFilterShiftUp():
@@ -217,16 +253,16 @@ frmBottom.pack(side=BOTTOM, fill=X)
 frmControls = Frame(frmBottom, dname="frmControls")
 frmControls.pack(side=LEFT)
 
-btnStart = Button(frmControls, text="Start")
+btnStart = Button(frmControls, text="Start", command=fnStart)
 btnStart.pack(side=TOP)
 
-btnStop = Button(frmControls, text="Stop")
+btnStop = Button(frmControls, text="Stop", command=fnStop, state=DISABLED)
 btnStop.pack(side=TOP)
 
 frmLog = Frame(frmBottom, dname="frmLog")
 frmLog.pack(side=RIGHT, fill=X, expand=YES)
 
-txtLog = Text(frmLog, height=4)
+txtLog = ScrolledText(frmLog, height=4)
 txtLog.pack(side=LEFT, fill=X, expand=YES)
 
 root.mainloop()
