@@ -96,7 +96,9 @@ FTAL = (4, "FTAL")
 def log(level, text):
 	formatted = "{0:%Y-%m-%d %H:%M:%S} [{1}] {2}".format(datetime.datetime.now(), level[1], text)
 	print(formatted)
+	txtLog.config(state=NORMAL) #Why would you design a library like this, Ousterhout? WHY!
 	txtLog.insert(END, formatted + "\n")
+	txtLog.config(state=DISABLED)
 	txtLog.yview(END)
 
 # ============================== THE GUTS ==============================
@@ -494,7 +496,7 @@ btnStop.pack(side=TOP)
 frmLog = Frame(frmBottom)
 frmLog.pack(side=RIGHT, fill=X, expand=YES)
 
-txtLog = ScrolledText(frmLog, height=4)
+txtLog = ScrolledText(frmLog, height=4, state=DISABLED)
 txtLog.pack(side=LEFT, fill=X, expand=YES)
 
 root.mainloop()
