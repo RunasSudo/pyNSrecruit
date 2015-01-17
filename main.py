@@ -21,7 +21,10 @@ import tkinter.simpledialog
 from tkinter.scrolledtext import ScrolledText
 
 import datetime
+import threading
+import traceback
 import urllib.parse
+import urllib.request
 import webbrowser
 
 # =========================== DEBUG SECTION ===========================
@@ -73,20 +76,50 @@ def log(level, text):
 
 # ============================== THE GUTS ==============================
 
-startedTelegramming = False
+isTelegramming = False
+
+def telegramThread():
+	log(INFO, "Started telegramming.")
+	
+	try:
+		query = urllib.parse.urlencode({
+			"client": txtClientKey.get(1.0, END).rstrip(),
+			"tgid": txtTelegramID.get(1.0, END).rstrip(),
+			"key": txtSecretKey.get(1.0, END).rstrip(),
+			"to": "North Jarvis"
+		})
+		
+		req = urllib.request.Request("http://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&{0}".format(query))
+		req.add_header("User-Agent", "pyNSrecruit/0.1 (South Jarvis)")
+		
+		resp = urllib.request.urlopen(req)
+		
+		log(INFO, "Got status: {0}".format(resp.status))
+	except Exception as e:
+		log(CRIT, "An error occurred while telegramming. Check the log.\n{0}".format(repr(e)))
+		print(traceback.format_exc())
+	
+	isTelegramming = False
+	
+	log(INFO, "Stopped telegramming.")
+	btnStart.config(state=NORMAL)
+	btnStop.config(state=DISABLED)
 
 def fnStart():
-	log(INFO, "Started telegramming.")
-	startedTelegramming = True
+	log(INFO, "Starting telegramming.")
+	isTelegramming = True
 	btnStart.config(state=DISABLED)
 	btnStop.config(state=NORMAL)
+	
+	thread = threading.Thread(target=telegramThread)
+	thread.start()
 
 def fnStop():
 	log(INFO, "Stopping telegramming.")
-	startedTelegramming = False
-	btnStart.config(state=NORMAL)
-	btnStop.config(state=DISABLED)
-	log(INFO, "Stopped telegramming.")
+	
+	isTelegramming = False #Signal to the telegram thread that it should stop.
+	
+	#Wait for stop.
 
 # ============================= GUI LAYOUT =============================
 
