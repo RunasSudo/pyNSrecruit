@@ -40,13 +40,18 @@ class Frame(Frame): #Magic.
 		super().__init__(master, **options)
 
 # =========================== GUI FUNCTIONS ===========================
-def lbShift(listbox, offset):
+def lbShift(listbox, listdata, offset):
 	if len(listbox.curselection()) > 0:
 		selection = listbox.curselection()[0]
 		if selection + offset >= 0 and selection + offset < listbox.size():
-			text = listbox.get(selection)
+			data = listdata[selection]
+			
 			listbox.delete(selection)
-			listbox.insert(selection + offset, text)
+			listdata.pop(selection)
+			
+			listbox.insert(selection + offset, data)
+			data.insert(selection + offset, data)
+			
 			listbox.selection_set(selection + offset)
 
 def makeLabelledText(master, label):
@@ -76,7 +81,13 @@ def log(level, text):
 
 # ============================== THE GUTS ==============================
 
+class TargetFilter:
+	def __str__(self):
+		return "Unknown filter"
+
 isTelegramming = False
+
+listFilters = []
 
 def telegramThread():
 	log(INFO, "Started telegramming.")
@@ -92,9 +103,9 @@ def telegramThread():
 		req = urllib.request.Request("http://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&{0}".format(query))
 		req.add_header("User-Agent", "pyNSrecruit/0.1 (South Jarvis)")
 		
-		resp = urllib.request.urlopen(req)
+		#resp = urllib.request.urlopen(req)
 		
-		log(INFO, "Got status: {0}".format(resp.status))
+		#log(INFO, "Got status: {0}".format(resp.status))
 	except Exception as e:
 		log(CRIT, "An error occurred while telegramming. Check the log.\n{0}".format(repr(e)))
 		print(traceback.format_exc())
@@ -202,12 +213,12 @@ btnFilterRemove = Button(frmFilterControls, text="−", width=2, state=DISABLED)
 btnFilterRemove.pack(side=TOP)
 
 def fnFilterShiftUp():
-	lbShift(lbFilters, -1)
+	lbShift(lbFilters, listFilters, -1)
 btnFilterShiftUp = Button(frmFilterControls, text="▲", width=2, command=fnFilterShiftUp)
 btnFilterShiftUp.pack(side=TOP)
 
 def fnFilterShiftDown():
-	lbShift(lbFilters, 1)
+	lbShift(lbFilters, listFilters, 1)
 btnFilterShiftDown = Button(frmFilterControls, text="▼", width=2, command=fnFilterShiftDown)
 btnFilterShiftDown.pack(side=TOP)
 
@@ -217,7 +228,9 @@ lbFilters = Listbox(frmFilterTargets, yscrollcommand=sbFilters.set)
 lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
 sbFilters.config(command=lbCampaigns.yview)
 
-lbFilters.insert(END, "Include Nation 'North Jarvis'")
+tmp = TargetFilter()
+lbFilters.insert(END, tmp)
+listFilters.append(tmp)
 
 #                             OTHER SETTINGS                            
 
@@ -275,7 +288,7 @@ varCampaignEnabled.set(1)
 Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
 
 varCampaignDryRun = IntVar()
-varCampaignDryRun.set(0)
+varCampaignDryRun.set(1)
 Checkbutton(frmDetails, text="Dry Run (Don't actually send any telegrams)", variable=varCampaignDryRun).pack(side=TOP, anchor=W)
 
 # ---------------------------- BOTTOM PANEL ----------------------------
