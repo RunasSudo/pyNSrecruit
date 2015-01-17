@@ -17,6 +17,9 @@
 
 from tkinter import *
 from tkinter.ttk import *
+import tkinter.simpledialog
+
+import urllib.parse
 
 # =========================== DEBUG SECTION ===========================
 DEBUG = False
@@ -57,6 +60,24 @@ root = Tk()
 root.wm_title("pyNSrecruit")
 #Style().theme_use("clam")
 
+# ------------------------------ MENUBAR ------------------------------
+
+menubar = Menu(root)
+
+menuFile = Menu(menubar, tearoff=0)
+menuFile.add_command(label="Save")
+menuFile.add_command(label="Load")
+menuFile.add_separator()
+menuFile.add_command(label="Quit", command=root.quit)
+menubar.add_cascade(label="File", menu=menuFile)
+
+menuHelp = Menu(menubar, tearoff=0)
+menuHelp.add_command(label="Online Help")
+menuHelp.add_command(label="About")
+menubar.add_cascade(label="Help", menu=menuHelp)
+
+root.config(menu=menubar)
+
 frmTop = Frame(root, dname="frmTop")
 frmTop.pack(side=TOP, fill=BOTH, expand=YES)
 
@@ -74,10 +95,7 @@ lbCampaigns = Listbox(frmCampaigns, yscrollcommand=sbCampaigns.set)
 lbCampaigns.pack(side=LEFT, fill=BOTH, expand=YES)
 sbCampaigns.config(command=lbCampaigns.yview)
 
-for num in range(0, 10):
-	lbCampaigns.insert(END, "Campaign {0}".format(num))
-
-lbCampaigns.itemconfig(1, fg="#AAAAAA")
+#lbCampaigns.itemconfig(1, fg="#AAAAAA")
 
 frmCampaignsSL = Frame(frmLeft, dname="frmCampaignsSL")
 frmCampaignsSL.pack(side=BOTTOM)
@@ -130,9 +148,7 @@ lbFilters = Listbox(frmFilterTargets, yscrollcommand=sbFilters.set)
 lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
 sbFilters.config(command=lbCampaigns.yview)
 
-lbFilters.insert(END, "Include Recently Founded")
-lbFilters.insert(END, "Exclude Regions 'arnhelm_signatory_1', 'Arnhelm Signatory 2'")
-lbFilters.insert(END, "Exclude Classification 'Psychotic Dictatorship'")
+lbFilters.insert(END, "Include Nation 'North Jarvis'")
 
 #                             OTHER SETTINGS                            
 
@@ -147,7 +163,24 @@ frmTelegramSettings.pack(side=TOP, fill=X)
 txtTelegramID = makeLabelledText(frmTelegramSettings, "Telegram ID:")
 txtSecretKey = makeLabelledText(frmTelegramSettings, "Secret Key:")
 
-btnGetFromURL = Button(frmTelegramSettings, text="Get Settings from URL")
+def fnGetFromURL():
+	apiURL = tkinter.simpledialog.askstring("Get Settings from URL", "Paste the 'make an API Request to' URL here to automatically detect the telegram ID and secret key.\ne.g. http://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&client=YOUR_API_CLIENT_KEY&tgid=TELEGRAM_ID&key=SECRET_KEY&to=NATION_NAME", parent=root)
+	if apiURL:
+		params = urllib.parse.parse_qs(urllib.parse.urlparse(apiURL).query)
+		
+		if "client" in params and params["client"][0] != "YOUR_API_CLIENT_KEY":
+			txtClientKey.delete(1.0, END)
+			txtClientKey.insert(END, params["client"][0])
+		
+		if "tgid" in params:
+			txtTelegramID.delete(1.0, END)
+			txtTelegramID.insert(END, params["tgid"][0])
+		
+		if "key" in params:
+			txtSecretKey.delete(1.0, END)
+			txtSecretKey.insert(END, params["key"][0])
+
+btnGetFromURL = Button(frmTelegramSettings, text="Get Settings from URL", command=fnGetFromURL)
 btnGetFromURL.pack(side=TOP, fill=X)
 
 frmSendingRate = LabelFrame(frmDetails, text="Sending Rate")
@@ -166,11 +199,15 @@ Radiobutton(frmCustomRate, text="Custom Rate:", variable=varSendingRate, value=0
 txtCustomRate = Text(frmCustomRate, height=1, width=3)
 txtCustomRate.pack(side=LEFT)
 
-Label(frmCustomRate, text="s").pack(side=LEFT)
+Label(frmCustomRate, text="s (This may violate the API Terms of Service!)").pack(side=LEFT)
 
 varCampaignEnabled = IntVar()
 varCampaignEnabled.set(1)
 Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
+
+varCampaignDryRun = IntVar()
+varCampaignDryRun.set(0)
+Checkbutton(frmDetails, text="Dry Run (Don't actually send any telegrams)", variable=varCampaignDryRun).pack(side=TOP, anchor=W)
 
 # ---------------------------- BOTTOM PANEL ----------------------------
 
