@@ -112,6 +112,7 @@ class Campaign:
 		self.telegramID = ""
 		self.secretKey = ""
 		self.sendingRate = 180
+		self.customRate = ""
 		self.enabled = 1
 		self.dryRun = 0
 	def __str__(self):
@@ -319,6 +320,7 @@ def fnMenuSave():
 				campaignDict["telegramID"] = campaign.telegramID
 				campaignDict["secretKey"] = campaign.secretKey
 				campaignDict["sendingRate"] = campaign.sendingRate
+				campaignDict["customRate"] = campaign.customRate
 				campaignDict["enabled"] = campaign.enabled
 				campaignDict["dryRun"] = campaign.dryRun
 				
@@ -358,6 +360,13 @@ def fnMenuLoad():
 			
 			for campaignDict in data["campaigns"]:
 				campaign = Campaign(campaignDict["name"])
+				campaign.clientKey = campaignDict["clientKey"]
+				campaign.telegramID = campaignDict["telegramID"]
+				campaign.secretKey = campaignDict["secretKey"]
+				campaign.sendingRate = campaignDict["sendingRate"]
+				campaign.customRate = campaignDict["customRate"]
+				campaign.enabled = campaignDict["enabled"]
+				campaign.dryRun = campaignDict["dryRun"]
 				
 				for filterDict in campaignDict["filters"]:
 					filterType = TargetFilter.getTypeFromString(filterDict["type"])
@@ -424,6 +433,7 @@ def fnSave():
 	campaign.telegramID = txtTelegramID.get(1.0, END).rstrip()
 	campaign.secretKey = txtSecretKey.get(1.0, END).rstrip()
 	campaign.sendingRate = varSendingRate.get()
+	campaign.customRate = txtCustomRate.get(1.0, END).rstrip()
 	campaign.enabled = varCampaignEnabled.get()
 	campaign.dryRun = varCampaignDryRun.get()
 	
@@ -445,6 +455,18 @@ def fnLoad(*args):
 		listFilters[:] = []
 		
 		campaign = listCampaigns[selection]
+		
+		txtClientKey.delete(1.0, END)
+		txtClientKey.insert(END, campaign.clientKey)
+		txtTelegramID.delete(1.0, END)
+		txtTelegramID.insert(END, campaign.telegramID)
+		txtSecretKey.delete(1.0, END)
+		txtSecretKey.insert(END, campaign.secretKey)
+		varSendingRate.set(campaign.sendingRate)
+		txtCustomRate.delete(1.0, END)
+		txtCustomRate.insert(END, campaign.customRate)
+		varCampaignEnabled.set(campaign.enabled)
+		varCampaignDryRun.set(campaign.dryRun)
 		
 		for theFilter in campaign.filters:
 			copyFilter = theFilter.makeCopy()
