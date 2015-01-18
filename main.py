@@ -108,6 +108,12 @@ class Campaign:
 	def __init__(self, name):
 		self.name = name
 		self.filters = []
+		self.clientKey = ""
+		self.telegramID = ""
+		self.secretKey = ""
+		self.sendingRate = 180
+		self.enabled = 1
+		self.dryRun = 0
 	def __str__(self):
 		return self.name
 
@@ -134,6 +140,7 @@ class TargetFilter:
 	
 	def makeCopy(self):
 		#Jump through hoops to avoid referencing filters of other campaigns
+		#copy.deepcopy = infinite recursion :(
 		return TargetFilter.getTypeFromString(self.getTypeString()).fromDict(self.toDict())
 	
 	def configureCallback(self):
@@ -308,6 +315,13 @@ def fnMenuSave():
 			for campaign in listCampaigns:
 				campaignDict = {}
 				campaignDict["name"] = campaign.name
+				campaignDict["clientKey"] = campaign.clientKey
+				campaignDict["telegramID"] = campaign.telegramID
+				campaignDict["secretKey"] = campaign.secretKey
+				campaignDict["sendingRate"] = campaign.sendingRate
+				campaignDict["enabled"] = campaign.enabled
+				campaignDict["dryRun"] = campaign.dryRun
+				
 				campaignDict["filters"] = []
 				
 				for theFilter in campaign.filters:
@@ -405,6 +419,13 @@ def fnSave():
 			break
 	
 	campaign = Campaign(campaignName)
+	
+	campaign.clientKey = txtClientKey.get(1.0, END).rstrip()
+	campaign.telegramID = txtTelegramID.get(1.0, END).rstrip()
+	campaign.secretKey = txtSecretKey.get(1.0, END).rstrip()
+	campaign.sendingRate = varSendingRate.get()
+	campaign.enabled = varCampaignEnabled.get()
+	campaign.dryRun = varCampaignDryRun.get()
 	
 	for theFilter in listFilters:
 		campaign.filters.append(theFilter.makeCopy())
@@ -541,7 +562,7 @@ varCampaignEnabled.set(1)
 Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
 
 varCampaignDryRun = IntVar()
-varCampaignDryRun.set(1)
+varCampaignDryRun.set(0)
 Checkbutton(frmDetails, text="Dry Run (Don't actually send any telegrams)", variable=varCampaignDryRun).pack(side=TOP, anchor=W)
 
 # ---------------------------- BOTTOM PANEL ----------------------------
