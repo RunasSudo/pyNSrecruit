@@ -103,6 +103,13 @@ def log(level, text):
 
 # ============================== THE GUTS ==============================
 
+class Campaign:
+	def __init__(self, name):
+		self.name = name
+		self.filters = []
+	def __str__(self):
+		return self.name
+
 class TargetFilter:
 	FILTER_EXCLUDE = 1
 	FILTER_INCLUDE = 2
@@ -173,6 +180,8 @@ class FilterIncludeName(TargetFilter):
 		self.txtNames.pack(side=TOP, fill=X)
 
 isTelegramming = False
+
+listCampaigns = []
 
 listFilters = []
 
@@ -274,7 +283,9 @@ def fnFilterAdd():
 
 root = Tk()
 root.wm_title("pyNSrecruit")
-#Style().theme_use("clam")
+
+#themes = Style().theme_names()
+#Style().theme_use("alt")
 
 # ------------------------------ MENUBAR ------------------------------
 
@@ -369,13 +380,36 @@ sbCampaigns.config(command=lbCampaigns.yview)
 frmCampaignsSL = Frame(frmLeft)
 frmCampaignsSL.pack(side=BOTTOM)
 
-btnSave = Button(frmCampaignsSL, text="Save", state=DISABLED)
+def fnSave():
+	campaignName = tkinter.simpledialog.askstring("Save Campaign", "Campaign Name:", parent=root)
+	
+	#Delete the campaign if it already exists
+	for i in range(0, len(listCampaigns)):
+		if listCampaigns[i].name == campaignName:
+			listCampaigns.pop(i)
+			lbCampaigns.delete(i)
+			break
+	
+	campaign = Campaign(campaignName)
+	
+	campaign.filters = listFilters
+	
+	listCampaigns.append(campaign)
+	lbCampaigns.insert(END, campaign)
+
+btnSave = Button(frmCampaignsSL, text="Save", command=fnSave)
 btnSave.pack(side=LEFT)
 
 btnLoad = Button(frmCampaignsSL, text="Load", state=DISABLED)
 btnLoad.pack(side=LEFT)
 
-btnDelete = Button(frmCampaignsSL, text="Delete", state=DISABLED)
+def fnDelete():
+	if len(lbCampaigns.curselection()) > 0:
+		selection = lbCampaigns.curselection()[0]
+		lbCampaigns.delete(selection)
+		listCampaigns.pop(selection)
+
+btnDelete = Button(frmCampaignsSL, text="Delete", command=fnDelete)
 btnDelete.pack(side=LEFT)
 
 # -------------------------- CAMPAIGN DETAILS --------------------------
