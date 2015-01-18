@@ -375,6 +375,9 @@ def fnMenuLoad():
 				
 				listCampaigns.append(campaign)
 				lbCampaigns.insert(END, campaign)
+				
+				if not campaign.enabled:
+					lbCampaigns.itemconfig(END, fg="#AAAAAA")
 			
 			log(INFO, "Loaded session data.")
 		except Exception as e:
@@ -412,8 +415,6 @@ lbCampaigns = Listbox(frmCampaigns, yscrollcommand=sbCampaigns.set)
 lbCampaigns.pack(side=LEFT, fill=BOTH, expand=YES)
 sbCampaigns.config(command=lbCampaigns.yview)
 
-#lbCampaigns.itemconfig(1, fg="#AAAAAA")
-
 frmCampaignsSL = Frame(frmLeft)
 frmCampaignsSL.pack(side=BOTTOM)
 
@@ -442,6 +443,9 @@ def fnSave():
 	
 	listCampaigns.append(campaign)
 	lbCampaigns.insert(END, campaign)
+	
+	if not campaign.enabled:
+		lbCampaigns.itemconfig(END, fg="#AAAAAA")
 
 btnSave = Button(frmCampaignsSL, text="Save", command=fnSave)
 btnSave.pack(side=LEFT)
