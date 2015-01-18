@@ -21,6 +21,7 @@ import tkinter.filedialog
 import tkinter.simpledialog
 from tkinter.scrolledtext import ScrolledText
 
+import copy
 import datetime
 import json
 import threading
@@ -124,12 +125,16 @@ class TargetFilter:
 	def fromDict(data):
 		return TargetFilter()
 	
-	def getTypeString(typeString):
+	def getTypeString(self):
 		return "TargetFilter"
 	def getTypeFromString(typeString):
 		if typeString == "FilterIncludeName":
 			return FilterIncludeName
 		return TargetFilter
+	
+	def makeCopy(self):
+		#Jump through hoops to avoid referencing filters of other campaigns
+		return TargetFilter.getTypeFromString(self.getTypeString()).fromDict(self.toDict())
 	
 	def configureCallback(self):
 		return
@@ -166,7 +171,7 @@ class FilterIncludeName(TargetFilter):
 		}
 	def fromDict(data):
 		return FilterIncludeName(data["names"])
-	def getTypeString(typeString):
+	def getTypeString(self):
 		return "FilterIncludeName"
 	
 	def configureCallback(self):
@@ -334,9 +339,8 @@ def fnMenuLoad():
 				return
 			
 			#Clear the campaign data.
-			for i in range(0, len(listCampaigns)):
-				lbCampaigns.delete(i)
-				listCampaigns.pop(i)
+			lbCampaigns.delete(0, END)
+			listCampaigns[:] = []
 			
 			for campaignDict in data["campaigns"]:
 				campaign = Campaign(campaignDict["name"])
@@ -402,7 +406,8 @@ def fnSave():
 	
 	campaign = Campaign(campaignName)
 	
-	campaign.filters = listFilters
+	for theFilter in listFilters:
+		campaign.filters.append(theFilter.makeCopy())
 	
 	listCampaigns.append(campaign)
 	lbCampaigns.insert(END, campaign)
@@ -410,8 +415,24 @@ def fnSave():
 btnSave = Button(frmCampaignsSL, text="Save", command=fnSave)
 btnSave.pack(side=LEFT)
 
-btnLoad = Button(frmCampaignsSL, text="Load", state=DISABLED)
+def fnLoad(*args):
+	if len(lbCampaigns.curselection()) > 0:
+		selection = lbCampaigns.curselection()[0]
+		
+		#Clear the campaign data.
+		lbFilters.delete(0, END)
+		listFilters[:] = []
+		
+		campaign = listCampaigns[selection]
+		
+		for theFilter in campaign.filters:
+			copyFilter = theFilter.makeCopy()
+			lbFilters.insert(END, copyFilter)
+			listFilters.append(copyFilter)
+
+btnLoad = Button(frmCampaignsSL, text="Load", command=fnLoad)
 btnLoad.pack(side=LEFT)
+lbCampaigns.bind("<Double-Button-1>", fnLoad)
 
 def fnDelete():
 	if len(lbCampaigns.curselection()) > 0:
