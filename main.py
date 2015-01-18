@@ -333,17 +333,21 @@ def fnMenuLoad():
 				log(ERRR, "Unsupported version number {0}.".format(data.version))
 				return
 			
-			#Clear the filter data.
-			for i in range(0, len(listFilters)):
-				lbFilters.delete(i)
-				listFilters.pop(i)
+			#Clear the campaign data.
+			for i in range(0, len(listCampaigns)):
+				lbCampaigns.delete(i)
+				listCampaigns.pop(i)
 			
-			for filterDict in data["campaigns"][0]["filters"]:
-				filterType = TargetFilter.getTypeFromString(filterDict["type"])
-				theFilter = filterType.fromDict(filterDict)
+			for campaignDict in data["campaigns"]:
+				campaign = Campaign(campaignDict["name"])
 				
-				lbFilters.insert(END, theFilter)
-				listFilters.append(theFilter)
+				for filterDict in campaignDict["filters"]:
+					filterType = TargetFilter.getTypeFromString(filterDict["type"])
+					theFilter = filterType.fromDict(filterDict)
+					campaign.filters.append(theFilter)
+				
+				listCampaigns.append(campaign)
+				lbCampaigns.insert(END, campaign)
 			
 			log(INFO, "Loaded session data.")
 		except Exception as e:
