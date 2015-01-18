@@ -299,12 +299,18 @@ def fnMenuSave():
 		try:
 			data = {"version": 1}
 			data["campaigns"] = []
-			data["campaigns"].append({})
-			data["campaigns"][0]["filters"] = []
-			for theFilter in listFilters:
-				filterDict = theFilter.toDict()
-				filterDict["type"] = theFilter.getTypeString()
-				data["campaigns"][0]["filters"].append(filterDict)
+			
+			for campaign in listCampaigns:
+				campaignDict = {}
+				campaignDict["name"] = campaign.name
+				campaignDict["filters"] = []
+				
+				for theFilter in campaign.filters:
+					filterDict = theFilter.toDict()
+					filterDict["type"] = theFilter.getTypeString()
+					campaignDict["filters"].append(filterDict)
+				
+				data["campaigns"].append(campaignDict)
 			
 			with open(filename, "w") as fHandle:
 				json.dump(data, fHandle)
