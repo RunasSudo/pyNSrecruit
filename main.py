@@ -21,9 +21,11 @@ import tkinter.filedialog
 import tkinter.simpledialog
 from tkinter.scrolledtext import ScrolledText
 
+import collections
 import copy
 import datetime
 import json
+import time
 import threading
 import traceback
 import urllib.parse
@@ -88,11 +90,12 @@ def _set_transient(widget, master, relx=0.5, rely=0.3):
 
 #                                LOGGING                               
 
-INFO = (0, "INFO")
-WARN = (1, "WARN")
-ERRR = (2, "ERRR")
-CRIT = (3, "CRIT")
-FTAL = (4, "FTAL")
+DEBG = (0, "DEBG")
+INFO = (1, "INFO")
+WARN = (2, "WARN")
+ERRR = (3, "ERRR")
+CRIT = (4, "CRIT")
+FTAL = (5, "FTAL")
 
 def log(level, text):
 	formatted = "{0:%Y-%m-%d %H:%M:%S} [{1}] {2}".format(datetime.datetime.now(), level[1], text)
@@ -173,6 +176,9 @@ class FilterIncludeName(TargetFilter):
 	def filterType(self):
 		return TargetFilter.FILTER_INCLUDE
 	
+	def getNations(self):
+		return self.names
+	
 	def toDict(self):
 		return {
 			"names": self.names
@@ -199,22 +205,55 @@ listCampaigns = []
 listFilters = []
 
 def telegramThread():
+	global isTelegramming #What is Python even?
+	
 	log(INFO, "Started telegramming.")
 	
+	telegramHistory = collections.deque(maxlen=100) #TODO: Make this configurable.
+	
 	try:
-		query = urllib.parse.urlencode({
-			"client": txtClientKey.get(1.0, END).rstrip(),
-			"tgid": txtTelegramID.get(1.0, END).rstrip(),
-			"key": txtSecretKey.get(1.0, END).rstrip(),
-			"to": "North Jarvis"
-		})
-		
-		req = urllib.request.Request("http://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&{0}".format(query))
-		req.add_header("User-Agent", "pyNSrecruit/0.1 (South Jarvis)")
-		
-		#resp = urllib.request.urlopen(req)
-		
-		#log(INFO, "Got status: {0}".format(resp.status))
+		while isTelegramming:
+			targetNations = []
+			#Compute INCLUDE targets
+			for campaign in listCampaigns:
+				if campaign.enabled:
+					for theFilter in campaign.filters:
+						if theFilter.filterType() == TargetFilter.FILTER_INCLUDE:
+							targetNations.extend(theFilter.getNations())
+			
+			nationsTelegrammed = 0 #This round
+			for nation in targetNations:
+				log(DEBG, "Trying {0}.".format(nation))
+				
+				if nation in telegramHistory:
+					log(DEBG, "Discarding {0} due to being present in history.".format(nation))
+					break
+				
+				#TODO: Exclude filters
+				
+				nationsTelegrammed += 1
+				
+				log(INFO, "Telegramming {0}.".format(nation))
+				
+				#TODO: Telegram
+				
+				telegramHistory.append(nation)
+				
+				sendingRate = varSendingRate.get()
+				if sendingRate == 0:
+					sendingRate = int(txtCustomRate.get(1.0, END).rstrip())
+				if sendingRate < 0:
+					sendingRate = 0
+				
+				log(INFO, "Waiting {0} seconds.".format(sendingRate))
+				time.sleep(sendingRate + 2) #The rate is a lie!
+				
+				break
+			
+			if nationsTelegrammed <= 0:
+				log(WARN, "All applicable nations have been telegrammed already. Waiting 30 seconds.")
+				log(WARN, "If telegramming a fixed number of recipients, it is safe to stop telegramming now.")
+				time.sleep(30)
 	except Exception as e:
 		log(CRIT, "An error occurred while telegramming. Check the log.\n{0}".format(repr(e)))
 		print(traceback.format_exc())
@@ -226,16 +265,21 @@ def telegramThread():
 	btnStop.config(state=DISABLED)
 
 def fnStart():
+	global isTelegramming
+	
 	log(INFO, "Starting telegramming.")
 	isTelegramming = True
 	btnStart.config(state=DISABLED)
 	btnStop.config(state=NORMAL)
 	
 	thread = threading.Thread(target=telegramThread)
+	thread.daemon = True
 	thread.start()
 
 def fnStop():
-	log(INFO, "Stopping telegramming.")
+	global isTelegramming
+	
+	log(INFO, "Stopping telegramming. Telegramming will stop when waiting finishes.")
 	
 	isTelegramming = False #Signal to the telegram thread that it should stop.
 	
@@ -608,7 +652,7 @@ btnStop.pack(side=TOP)
 frmLog = Frame(frmBottom)
 frmLog.pack(side=RIGHT, fill=X, expand=YES)
 
-txtLog = ScrolledText(frmLog, height=4, state=DISABLED)
+txtLog = ScrolledText(frmLog, height=5, state=DISABLED)
 txtLog.pack(side=LEFT, fill=X, expand=YES)
 
 root.mainloop()
