@@ -32,6 +32,8 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
+VERSION = "0.1"
+
 # =========================== GUI FUNCTIONS ===========================
 def lbShift(listbox, listdata, offset):
 	if len(listbox.curselection()) > 0:
@@ -131,7 +133,7 @@ class TargetFilter:
 		return 0
 	
 	def toDict(self):
-		return []
+		return {}
 	def fromDict(data):
 		return TargetFilter()
 	
@@ -140,6 +142,9 @@ class TargetFilter:
 	def getTypeFromString(typeString):
 		if typeString == "FilterIncludeName":
 			return FilterIncludeName
+		if typeString == "FilterIncludeAction":
+			return FilterIncludeAction
+		log(WARN, "Unknown filter type {0}.".format(typeString))
 		return TargetFilter
 	
 	def makeCopy(self):
@@ -198,6 +203,65 @@ class FilterIncludeName(TargetFilter):
 		self.txtNames = ScrolledText(top, height=6)
 		self.txtNames.pack(side=TOP, fill=X)
 
+class FilterIncludeAction(TargetFilter):
+	def __init__(self, actionType):
+		self.actionType = actionType
+	def __str__(self):
+		return "Include action '{0}'".format(self.actionType)
+	def filterType(self):
+		return TargetFilter.FILTER_INCLUDE
+	
+	def getNations(self):
+		try:
+			if self.actionType == "founding" or self.actionType == "refounding":
+				req = urllib.request.Request("https://www.nationstates.net/cgi-bin/api.cgi?q=happenings;filter=founding;limit=50")
+			req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
+			resp = urllib.request.urlopen(req)
+			
+			nations = []
+			
+			if resp.status == 200:
+				data = resp.read().decode("utf-8")
+				happenings = re.finditer(r"<!\[CDATA\[(.*)\]\]>", data)
+				for happening in happenings:
+					happeningString = happening.group(1)
+					nation = re.search(r"@@(.*)@@", happeningString).group(1)
+					action = re.search(r"@@ was (founded|refounded) in %%", happeningString).group(1)
+					
+					if action == "founded" and self.actionType == "founding":
+						nations.append(nation)
+					if action == "refounded" and self.actionType == "refounding":
+						nations.append(nation)
+				return nations
+			else:
+				log(ERRR, "Unable to load happenings. Got response code {0}.".format(resp.status))
+		except Exception as e:
+			log(ERRR, "Unable to load happenings. Check the log.\n{0}".format(repr(e)))
+			print(traceback.format_exc())
+		
+		return []
+	
+	def toDict(self):
+		return {
+			"action": self.actionType
+		}
+	def fromDict(data):
+		return FilterIncludeAction(data["action"])
+	def getTypeString(self):
+		return "FilterIncludeAction"
+	
+	def configureCallback(self):
+		self.actionType = self.varActionType.get()
+		
+	def configure(self, callback):
+		top = super().configure(callback)
+		
+		Label(top, text="Action type:").pack(side=TOP, anchor=W)
+		
+		self.varActionType = StringVar()
+		Radiobutton(top, text="Nation Founding (excluding refounding)", variable=self.varActionType, value="founding").pack(anchor=W)
+		Radiobutton(top, text="Nation Refounding", variable=self.varActionType, value="refounding").pack(anchor=W)
+
 isTelegramming = False
 
 listCampaigns = []
@@ -213,21 +277,26 @@ def telegramThread():
 	
 	try:
 		while isTelegramming:
-			targetNations = []
+			targetNationsData = []
 			#Compute INCLUDE targets
 			for campaign in listCampaigns:
 				if campaign.enabled:
 					for theFilter in campaign.filters:
 						if theFilter.filterType() == TargetFilter.FILTER_INCLUDE:
-							targetNations.extend(theFilter.getNations())
+							nations = theFilter.getNations()
+							for nation in nations:
+								targetNationsData.append((campaign, nation))
 			
 			nationsTelegrammed = 0 #This round
-			for nation in targetNations:
+			for nationData in targetNationsData:
+				campaign = nationData[0]
+				nation = nationData[1]
+				
 				log(DEBG, "Trying {0}.".format(nation))
 				
 				if nation in telegramHistory:
 					log(DEBG, "Discarding {0} due to being present in history.".format(nation))
-					break
+					continue
 				
 				#TODO: Exclude filters
 				
@@ -235,13 +304,33 @@ def telegramThread():
 				
 				log(INFO, "Telegramming {0}.".format(nation))
 				
-				#TODO: Telegram
+				if campaign.dryRun:
+					log(INFO, "Dry-run mode enabled, so not doing anything.")
+				else:
+					#Telegram the nation
+					try:
+						query = urllib.parse.urlencode({
+							"client": campaign.clientKey,
+							"tgid": campaign.telegramID,
+							"key": campaign.secretKey,
+							"to": nation
+						})
+						
+						req = urllib.request.Request("http://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&{0}".format(query))
+						req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
+						
+						resp = urllib.request.urlopen(req)
+						
+						log(DEBG, "Got status: {0}.".format(resp.status))
+					except Exception as e:
+						log(ERRR, "An error occurred while telegramming the nation. Check the log.\n{0}".format(repr(e)))
+						print(traceback.format_exc())
 				
 				telegramHistory.append(nation)
 				
-				sendingRate = varSendingRate.get()
+				sendingRate = campaign.sendingRate
 				if sendingRate == 0:
-					sendingRate = int(txtCustomRate.get(1.0, END).rstrip())
+					sendingRate = int(campaign.customRate)
 				if sendingRate < 0:
 					sendingRate = 0
 				
@@ -255,7 +344,7 @@ def telegramThread():
 				log(WARN, "If telegramming a fixed number of recipients, it is safe to stop telegramming now.")
 				time.sleep(30)
 	except Exception as e:
-		log(CRIT, "An error occurred while telegramming. Check the log.\n{0}".format(repr(e)))
+		log(CRIT, "An error occurred. Check the log.\n{0}".format(repr(e)))
 		print(traceback.format_exc())
 	
 	isTelegramming = False
@@ -317,6 +406,7 @@ def fnFilterAdd():
 			optFilterType.config(state=NORMAL)
 			if varFilterMode.get() == "Include":
 				optFilterType["menu"].add_command(label="By Name", command=tkinter._setit(varFilterType, "By Name"))
+				optFilterType["menu"].add_command(label="By Action", command=tkinter._setit(varFilterType, "By Action"))
 	
 	varFilterMode.trace("w", fnChangeFilterMode)
 	
@@ -327,7 +417,9 @@ def fnFilterAdd():
 		theFilter = None
 		
 		if varFilterMode.get() == "Include" and varFilterType.get() == "By Name":
-			FilterIncludeName(["North Jarvis", "Greater Southeast Jarvis"]).configure(fnFilterAddCallback)
+			FilterIncludeName([]).configure(fnFilterAddCallback)
+		if varFilterMode.get() == "Include" and varFilterType.get() == "By Action":
+			FilterIncludeAction("").configure(fnFilterAddCallback)
 		
 		top.destroy()
 	
