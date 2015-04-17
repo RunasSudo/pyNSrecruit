@@ -32,7 +32,7 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
-VERSION = "0.1"
+VERSION = "0.2"
 
 # =========================== GUI FUNCTIONS ===========================
 def lbShift(listbox, listdata, offset):
@@ -262,6 +262,33 @@ class FilterIncludeAction(TargetFilter):
 		Radiobutton(top, text="Nation Founding (excluding refounding)", variable=self.varActionType, value="founding").pack(anchor=W)
 		Radiobutton(top, text="Nation Refounding", variable=self.varActionType, value="refounding").pack(anchor=W)
 
+class FilterExcludeClassification(TargetFilter):
+	def __init__(self, classifications):
+		self.classifications = classifications
+	def __str__(self):
+		return "Exclude classifications {0}".format(self.classifications)
+	def filterType(self):
+		return TargetFilter.FILTER_EXCLUDE
+	
+	def toDict(self):
+		return {
+			"classifications": self.classifications
+		}
+	def fromDict(data):
+		return FilterExcludeClassification(data["classifications"])
+	def getTypeString(self):
+		return "FilterExcludeClassifications"
+	
+	def configureCallback(self):
+		self.classifications = self.txtNames.get(1.0, END).rstrip().split("\n")
+		
+	def configure(self, callback):
+		top = super().configure(callback)
+		
+		Label(top, text="Nation names: (one per line)").pack(side=TOP, anchor=W)
+		self.txtNames = ScrolledText(top, height=6)
+		self.txtNames.pack(side=TOP, fill=X)
+
 isTelegramming = False
 
 listCampaigns = []
@@ -407,6 +434,8 @@ def fnFilterAdd():
 			if varFilterMode.get() == "Include":
 				optFilterType["menu"].add_command(label="By Name", command=tkinter._setit(varFilterType, "By Name"))
 				optFilterType["menu"].add_command(label="By Action", command=tkinter._setit(varFilterType, "By Action"))
+			if varFilterMode.get() == "Exclude":
+				optFilterType["menu"].add_command(label="By Classification", command=tkinter._setit(varFilterType, "By Classification"))
 	
 	varFilterMode.trace("w", fnChangeFilterMode)
 	
@@ -420,6 +449,8 @@ def fnFilterAdd():
 			FilterIncludeName([]).configure(fnFilterAddCallback)
 		if varFilterMode.get() == "Include" and varFilterType.get() == "By Action":
 			FilterIncludeAction("").configure(fnFilterAddCallback)
+		if varFilterMode.get() == "Exclude" and varFilterType.get() == "By Classification":
+			FilterExcludeClassification([]).configure(fnFilterAddCallback)
 		
 		top.destroy()
 	
