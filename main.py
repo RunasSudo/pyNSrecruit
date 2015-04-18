@@ -262,32 +262,78 @@ class FilterIncludeAction(TargetFilter):
 		Radiobutton(top, text="Nation Founding (excluding refounding)", variable=self.varActionType, value="founding").pack(anchor=W)
 		Radiobutton(top, text="Nation Refounding", variable=self.varActionType, value="refounding").pack(anchor=W)
 
-class FilterExcludeClassification(TargetFilter):
-	def __init__(self, classifications):
-		self.classifications = classifications
+class FilterExcludeCategory(TargetFilter):
+	def __init__(self, categories):
+		self.categories = categories
 	def __str__(self):
-		return "Exclude classifications {0}".format(self.classifications)
+		return "Exclude categories {0}".format(self.categories)
 	def filterType(self):
 		return TargetFilter.FILTER_EXCLUDE
 	
 	def toDict(self):
 		return {
-			"classifications": self.classifications
+			"categories": self.categories
 		}
 	def fromDict(data):
-		return FilterExcludeClassification(data["classifications"])
+		return FilterExcludeCategory(data["categories"])
 	def getTypeString(self):
-		return "FilterExcludeClassifications"
+		return "FilterExcludeCategory"
 	
 	def configureCallback(self):
-		self.classifications = self.txtNames.get(1.0, END).rstrip().split("\n")
+		self.categories = self.txtNames.get(1.0, END).rstrip().split("\n")
 		
 	def configure(self, callback):
 		top = super().configure(callback)
 		
-		Label(top, text="Nation names: (one per line)").pack(side=TOP, anchor=W)
-		self.txtNames = ScrolledText(top, height=6)
-		self.txtNames.pack(side=TOP, fill=X)
+		Label(top, text="Exclude the following nation categories:").pack(side=TOP, anchor=W)
+		
+		self.varCategories = []
+		
+		def addCategory(master, name):
+			var = IntVar()
+			cb = Checkbutton(master, text=name, variable=var)
+			cb.pack(side=TOP, anchor=W)
+			self.varCategories.append(var)
+		
+		threeCols = Frame(top)
+		
+		col1 = Frame(threeCols)
+		addCategory(col1, "Anarchy")
+		addCategory(col1, "Authoritarian Democracy")
+		addCategory(col1, "Benevolent Dictatorship")
+		addCategory(col1, "Capitalist Paradise")
+		addCategory(col1, "Capitalizt")
+		addCategory(col1, "Civil Rights Lovefest")
+		addCategory(col1, "Compulsory Consumerist State")
+		addCategory(col1, "Conservative Democracy")
+		addCategory(col1, "Corporate Bordello")
+		col1.pack(side=LEFT)
+		
+		col2 = Frame(threeCols)
+		addCategory(col2, "Corporate Police State")
+		addCategory(col2, "Corrupt Dictatorship")
+		addCategory(col2, "Democratic Socialists")
+		addCategory(col2, "Father Knows Best State")
+		addCategory(col2, "Free-Market Paradise")
+		addCategory(col2, "Inoffensive Centrist Democracy")
+		addCategory(col2, "Iron Fist Consumerists")
+		addCategory(col2, "Iron Fist Socialists")
+		addCategory(col2, "Left-Leaning College State")
+		col2.pack(side=LEFT)
+		
+		col3 = Frame(threeCols)
+		addCategory(col3, "Left-wing Utopia")
+		addCategory(col3, "Liberal Democratic Socialists")
+		addCategory(col3, "Libertarian Police State")
+		addCategory(col3, "Moralistic Democracy")
+		addCategory(col3, "New York Times Democracy")
+		addCategory(col3, "Psychotic Dictatorship")
+		addCategory(col3, "Right-wing Utopia")
+		addCategory(col3, "Scandinavian Liberal Paradise")
+		addCategory(col3, "Tyranny by Majority")
+		col3.pack(side=LEFT)
+		
+		threeCols.pack(side=TOP)
 
 isTelegramming = False
 
@@ -435,7 +481,7 @@ def fnFilterAdd():
 				optFilterType["menu"].add_command(label="By Name", command=tkinter._setit(varFilterType, "By Name"))
 				optFilterType["menu"].add_command(label="By Action", command=tkinter._setit(varFilterType, "By Action"))
 			if varFilterMode.get() == "Exclude":
-				optFilterType["menu"].add_command(label="By Classification", command=tkinter._setit(varFilterType, "By Classification"))
+				optFilterType["menu"].add_command(label="By Category", command=tkinter._setit(varFilterType, "By Category"))
 	
 	varFilterMode.trace("w", fnChangeFilterMode)
 	
@@ -449,8 +495,8 @@ def fnFilterAdd():
 			FilterIncludeName([]).configure(fnFilterAddCallback)
 		if varFilterMode.get() == "Include" and varFilterType.get() == "By Action":
 			FilterIncludeAction("").configure(fnFilterAddCallback)
-		if varFilterMode.get() == "Exclude" and varFilterType.get() == "By Classification":
-			FilterExcludeClassification([]).configure(fnFilterAddCallback)
+		if varFilterMode.get() == "Exclude" and varFilterType.get() == "By Category":
+			FilterExcludeCategory([]).configure(fnFilterAddCallback)
 		
 		top.destroy()
 	
