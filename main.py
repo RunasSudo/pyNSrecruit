@@ -159,17 +159,27 @@ class TargetFilter:
 		top = Toplevel()
 		top.wm_title("Configure Filter")
 		
-		frmButtons = Frame(top)
-		frmButtons.pack(side=BOTTOM)
+		self.frmButtons = Frame(top)
+		self.frmButtons.pack(side=BOTTOM)
 		
 		def fnConfirm():
 			self.configureCallback()
 			callback(self)
 			top.destroy()
-		Button(frmButtons, text="OK", command=fnConfirm).pack(side=LEFT)
-		Button(frmButtons, text="Cancel", command=top.destroy).pack(side=LEFT)
+		Button(self.frmButtons, text="OK", command=fnConfirm).pack(side=LEFT)
+		Button(self.frmButtons, text="Cancel", command=top.destroy).pack(side=LEFT)
 		
 		_set_transient(top, root)
+		
+		return top
+
+class TargetFilterInvertible(TargetFilter):
+	def configure(self, callback):
+		top = super().configure(callback)
+		
+		self.varInverted = IntVar()
+		cbInverted = Checkbutton(self.frmButtons, text="Invert filter", variable=self.varInverted)
+		cbInverted.pack(side=LEFT)
 		
 		return top
 
@@ -262,25 +272,27 @@ class FilterIncludeAction(TargetFilter):
 		Radiobutton(top, text="Nation Founding (excluding refounding)", variable=self.varActionType, value="founding").pack(anchor=W)
 		Radiobutton(top, text="Nation Refounding", variable=self.varActionType, value="refounding").pack(anchor=W)
 
-class FilterExcludeCategory(TargetFilter):
-	def __init__(self, categories):
+class FilterExcludeCategory(TargetFilterInvertible):
+	def __init__(self, categories, inverted):
 		self.categories = categories
+		self.inverted = inverted
 	def __str__(self):
-		return "Exclude categories {0}".format(self.categories)
+		return "Is inverted {0}".format(self.inverted)
 	def filterType(self):
 		return TargetFilter.FILTER_EXCLUDE
 	
 	def toDict(self):
 		return {
-			"categories": self.categories
+			"categories": self.categories,
+			"inverted": self.inverted
 		}
 	def fromDict(data):
-		return FilterExcludeCategory(data["categories"])
+		return FilterExcludeCategory(data["categories"], data["inverted"])
 	def getTypeString(self):
 		return "FilterExcludeCategory"
 	
 	def configureCallback(self):
-		self.categories = self.txtNames.get(1.0, END).rstrip().split("\n")
+		self.inverted = self.varInverted.get()
 		
 	def configure(self, callback):
 		top = super().configure(callback)
@@ -290,8 +302,8 @@ class FilterExcludeCategory(TargetFilter):
 		self.varCategories = []
 		
 		def addCategory(master, name):
-			var = IntVar()
-			cb = Checkbutton(master, text=name, variable=var)
+			var = [name, IntVar()]
+			cb = Checkbutton(master, text=name, variable=var[1])
 			cb.pack(side=TOP, anchor=W)
 			self.varCategories.append(var)
 		
@@ -496,7 +508,7 @@ def fnFilterAdd():
 		if varFilterMode.get() == "Include" and varFilterType.get() == "By Action":
 			FilterIncludeAction("").configure(fnFilterAddCallback)
 		if varFilterMode.get() == "Exclude" and varFilterType.get() == "By Category":
-			FilterExcludeCategory([]).configure(fnFilterAddCallback)
+			FilterExcludeCategory([], 0).configure(fnFilterAddCallback)
 		
 		top.destroy()
 	
