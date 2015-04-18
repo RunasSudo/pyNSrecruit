@@ -756,11 +756,14 @@ def fnFilterShiftDown():
 btnFilterShiftDown = Button(frmFilterControls, text="▼", width=2, command=fnFilterShiftDown)
 btnFilterShiftDown.pack(side=TOP)
 
-sbFilters = Scrollbar(frmFilterTargets)
-sbFilters.pack(side=RIGHT, fill=Y)
-lbFilters = Listbox(frmFilterTargets, yscrollcommand=sbFilters.set)
+sbXFilters = Scrollbar(frmFilterTargets, orient=HORIZONTAL)
+sbXFilters.pack(side=BOTTOM, fill=X)
+sbYFilters = Scrollbar(frmFilterTargets, orient=VERTICAL)
+sbYFilters.pack(side=RIGHT, fill=Y)
+lbFilters = Listbox(frmFilterTargets, xscrollcommand=sbXFilters.set, yscrollcommand=sbYFilters.set)
 lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
-sbFilters.config(command=lbCampaigns.yview)
+sbXFilters.config(command=lbFilters.xview)
+sbYFilters.config(command=lbFilters.yview)
 
 #                             OTHER SETTINGS                            
 
