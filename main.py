@@ -277,7 +277,7 @@ class FilterExcludeCategory(TargetFilterInvertible):
 		self.categories = categories
 		self.inverted = inverted
 	def __str__(self):
-		return "Is inverted {0}".format(self.inverted)
+		return "{0} categories {1}".format("NOT Exclude" if self.inverted else "Exclude", self.categories)
 	def filterType(self):
 		return TargetFilter.FILTER_EXCLUDE
 	
@@ -293,6 +293,11 @@ class FilterExcludeCategory(TargetFilterInvertible):
 	
 	def configureCallback(self):
 		self.inverted = self.varInverted.get()
+		self.categories = []
+		
+		for varCategory in self.varCategories:
+			if varCategory[1].get() == 1:
+				self.categories.append(varCategory[0])
 		
 	def configure(self, callback):
 		top = super().configure(callback)
