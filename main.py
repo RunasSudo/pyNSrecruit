@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -u
 #    pyNSrecruit
 #    Copyright (C) 2015  RunasSudo (Yingtong Li)
 #
@@ -144,6 +144,8 @@ class TargetFilter:
 			return FilterIncludeName
 		if typeString == "FilterIncludeAction":
 			return FilterIncludeAction
+		if typeString == "FilterExcludeCategory":
+			return FilterExcludeCategory
 		log(WARN, "Unknown filter type {0}.".format(typeString))
 		return TargetFilter
 	
@@ -281,6 +283,23 @@ class FilterExcludeCategory(TargetFilterInvertible):
 	def filterType(self):
 		return TargetFilter.FILTER_EXCLUDE
 	
+	def matches(self, nation):
+		req = urllib.request.Request("https://www.nationstates.net/cgi-bin/api.cgi?nation={0}&q=category".format(nation))
+		req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
+		resp = urllib.request.urlopen(req)
+		
+		if resp.status == 200:
+			data = resp.read().decode("utf-8")
+			nationCategory = re.search(r"<CATEGORY>(.*)</CATEGORY>", data).group(1)
+			log(DEBG, "Got category {0}.".format(nationCategory))
+			for matchCategory in self.categories:
+				if nationCategory == matchCategory:
+					return (True if self.inverted == 0 else False)
+			return (False if self.inverted == 0 else True)
+		else:
+			log(ERRR, "Unable to load data for {1}. Got response code {0}.".format(resp.status, nation))
+			return True #Be safe!
+	
 	def toDict(self):
 		return {
 			"categories": self.categories,
@@ -382,17 +401,26 @@ def telegramThread():
 				campaign = nationData[0]
 				nation = nationData[1]
 				
-				log(DEBG, "Trying {0}.".format(nation))
+				log(DEBG, "Trying {0} with '{1}'.".format(nation, campaign))
 				
 				if nation in telegramHistory:
 					log(DEBG, "Discarding {0} due to being present in history.".format(nation))
 					continue
 				
-				#TODO: Exclude filters
+				matchesFilter = False
+				for theFilter in campaign.filters:
+					if theFilter.filterType() == TargetFilter.FILTER_EXCLUDE:
+						if theFilter.matches(nation):
+							matchesFilter = theFilter
+							break
+				
+				if matchesFilter:
+					log(DEBG, "Discarding {0} due to matching '{1}'.".format(nation, matchesFilter))
+					continue
 				
 				nationsTelegrammed += 1
 				
-				log(INFO, "Telegramming {0}.".format(nation))
+				log(INFO, "Telegramming {0} with '{1}'.".format(nation, campaign))
 				
 				if campaign.dryRun:
 					log(INFO, "Dry-run mode enabled, so not doing anything.")
