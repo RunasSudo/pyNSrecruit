@@ -32,7 +32,7 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
-VERSION = "0.2"
+VERSION = "0.2.1"
 
 # =========================== GUI FUNCTIONS ===========================
 def lbShift(listbox, listdata, offset):
