@@ -32,7 +32,7 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
 
 # =========================== GUI FUNCTIONS ===========================
 def lbShift(listbox, listdata, offset):
@@ -284,21 +284,26 @@ class FilterExcludeCategory(TargetFilterInvertible):
 		return TargetFilter.FILTER_EXCLUDE
 	
 	def matches(self, nation):
-		req = urllib.request.Request("https://www.nationstates.net/cgi-bin/api.cgi?nation={0}&q=category".format(nation))
-		req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
-		resp = urllib.request.urlopen(req)
+		try:
+			req = urllib.request.Request("https://www.nationstates.net/cgi-bin/api.cgi?nation={0}&q=category".format(nation))
+			req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
+			resp = urllib.request.urlopen(req)
+			
+			if resp.status == 200:
+				data = resp.read().decode("utf-8")
+				nationCategory = re.search(r"<CATEGORY>(.*)</CATEGORY>", data).group(1)
+				log(DEBG, "Got category {0}.".format(nationCategory))
+				for matchCategory in self.categories:
+					if nationCategory == matchCategory:
+						return (True if self.inverted == 0 else False)
+				return (False if self.inverted == 0 else True)
+			else:
+				log(ERRR, "Unable to load data for {1}. Got response code {0}.".format(resp.status, nation))
+		except Exception as e:
+			log(ERRR, "Unable to load data for {1}. Check the log.\n{0}".format(repr(e), nation))
+			print(traceback.format_exc())
 		
-		if resp.status == 200:
-			data = resp.read().decode("utf-8")
-			nationCategory = re.search(r"<CATEGORY>(.*)</CATEGORY>", data).group(1)
-			log(DEBG, "Got category {0}.".format(nationCategory))
-			for matchCategory in self.categories:
-				if nationCategory == matchCategory:
-					return (True if self.inverted == 0 else False)
-			return (False if self.inverted == 0 else True)
-		else:
-			log(ERRR, "Unable to load data for {1}. Got response code {0}.".format(resp.status, nation))
-			return True #Be safe!
+		return True #Be safe!
 	
 	def toDict(self):
 		return {
