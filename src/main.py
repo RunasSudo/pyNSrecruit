@@ -15,6 +15,10 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# If you modify pyNSrecruit, please consider modifying one (or both) of the following lines to show this.
+VERSION = "0.2.2"
+USERAGENT = "pyNSrecruit/{0} (South Jarvis)".format(VERSION)
+
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog
@@ -31,8 +35,6 @@ import traceback
 import urllib.parse
 import urllib.request
 import webbrowser
-
-VERSION = "0.2.2"
 
 # =========================== GUI FUNCTIONS ===========================
 def lbShift(listbox, listdata, offset):
@@ -230,7 +232,7 @@ class FilterIncludeAction(TargetFilter):
 		try:
 			if self.actionType == "founding" or self.actionType == "refounding":
 				req = urllib.request.Request("https://www.nationstates.net/cgi-bin/api.cgi?q=happenings;filter=founding;limit=50")
-			req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
+			req.add_header("User-Agent", USERAGENT)
 			resp = urllib.request.urlopen(req)
 			
 			nations = []
@@ -290,7 +292,7 @@ class FilterExcludeCategory(TargetFilterInvertible):
 	def matches(self, nation):
 		try:
 			req = urllib.request.Request("https://www.nationstates.net/cgi-bin/api.cgi?nation={0}&q=category".format(nation))
-			req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
+			req.add_header("User-Agent", USERAGENT)
 			resp = urllib.request.urlopen(req)
 			
 			if resp.status == 200:
@@ -446,7 +448,7 @@ def telegramThread():
 						})
 						
 						req = urllib.request.Request("http://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&{0}".format(query))
-						req.add_header("User-Agent", "pyNSrecruit/{0} (South Jarvis)".format(VERSION))
+						req.add_header("User-Agent", USERAGENT)
 						
 						resp = urllib.request.urlopen(req)
 						
