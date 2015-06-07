@@ -545,8 +545,6 @@ def fnFilterAdd():
 	frmButtons.pack(side=tk.BOTTOM)
 	
 	def fnConfirm():
-		theFilter = None
-		
 		if varFilterMode.get() == "Include" and varFilterType.get() == "By Name":
 			FilterIncludeName([]).configure(fnFilterAddCallback)
 		if varFilterMode.get() == "Include" and varFilterType.get() == "By Action":
