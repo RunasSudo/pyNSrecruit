@@ -15,15 +15,16 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from tkinter import *
-from tkinter.ttk import *
+import tkinter as tk
+import tkinter.ttk as ttk
 import tkinter.filedialog
 import tkinter.simpledialog
-from tkinter.scrolledtext import ScrolledText
+import tkinter.scrolledtext
 
 import collections
 import datetime
 import json
+import re
 import time
 import threading
 import traceback
@@ -49,13 +50,13 @@ def lbShift(listbox, listdata, offset):
 			listbox.selection_set(selection + offset)
 
 def makeLabelledText(master, label):
-	frmContainer = Frame(master)
-	frmContainer.pack(side=TOP)
+	frmContainer = ttk.Frame(master)
+	frmContainer.pack(side=tk.TOP)
 	
-	Label(frmContainer, text=label).pack(side=LEFT)
+	ttk.Label(frmContainer, text=label).pack(side=tk.LEFT)
 	
-	txtText = Text(frmContainer, height=1)
-	txtText.pack(side=LEFT)
+	txtText = tk.Text(frmContainer, height=1)
+	txtText.pack(side=tk.LEFT)
 	
 	return txtText
 
@@ -101,10 +102,10 @@ FTAL = (5, "FTAL")
 def log(level, text):
 	formatted = "{0:%Y-%m-%d %H:%M:%S} [{1}] {2}".format(datetime.datetime.now(), level[1], text)
 	print(formatted)
-	txtLog.config(state=NORMAL)  # Why would you design a library like this, Ousterhout? WHY!
-	txtLog.insert(END, formatted + "\n")
-	txtLog.config(state=DISABLED)
-	txtLog.yview(END)
+	txtLog.config(state=tk.NORMAL)  # Why would you design a library like this, Ousterhout? WHY!
+	txtLog.insert(tk.END, formatted + "\n")
+	txtLog.config(state=tk.DISABLED)
+	txtLog.yview(tk.END)
 
 # ============================== THE GUTS ==============================
 
@@ -159,18 +160,18 @@ class TargetFilter:
 		return
 	
 	def configure(self, callback):
-		top = Toplevel()
+		top = tk.Toplevel()
 		top.wm_title("Configure Filter")
 		
-		self.frmButtons = Frame(top)
-		self.frmButtons.pack(side=BOTTOM)
+		self.frmButtons = ttk.Frame(top)
+		self.frmButtons.pack(side=tk.BOTTOM)
 		
 		def fnConfirm():
 			self.configureCallback()
 			callback(self)
 			top.destroy()
-		Button(self.frmButtons, text="OK", command=fnConfirm).pack(side=LEFT)
-		Button(self.frmButtons, text="Cancel", command=top.destroy).pack(side=LEFT)
+		ttk.Button(self.frmButtons, text="OK", command=fnConfirm).pack(side=tk.LEFT)
+		ttk.Button(self.frmButtons, text="Cancel", command=top.destroy).pack(side=tk.LEFT)
 		
 		_set_transient(top, root)
 		
@@ -180,9 +181,9 @@ class TargetFilterInvertible(TargetFilter):
 	def configure(self, callback):
 		top = super().configure(callback)
 		
-		self.varInverted = IntVar()
-		cbInverted = Checkbutton(self.frmButtons, text="Invert filter", variable=self.varInverted)
-		cbInverted.pack(side=LEFT)
+		self.varInverted = tk.IntVar()
+		cbInverted = ttk.Checkbutton(self.frmButtons, text="Invert filter", variable=self.varInverted)
+		cbInverted.pack(side=tk.LEFT)
 		
 		return top
 
@@ -208,14 +209,14 @@ class FilterIncludeName(TargetFilter):
 		return "FilterIncludeName"
 	
 	def configureCallback(self):
-		self.names = self.txtNames.get(1.0, END).rstrip().split("\n")
+		self.names = self.txtNames.get(1.0, tk.END).rstrip().split("\n")
 		
 	def configure(self, callback):
 		top = super().configure(callback)
 		
-		Label(top, text="Nation names: (one per line)").pack(side=TOP, anchor=W)
-		self.txtNames = ScrolledText(top, height=6)
-		self.txtNames.pack(side=TOP, fill=X)
+		ttk.Label(top, text="Nation names: (one per line)").pack(side=tk.TOP, anchor=tk.W)
+		self.txtNames = tkinter.scrolledtext.ScrolledText(top, height=6)
+		self.txtNames.pack(side=tk.TOP, fill=tk.X)
 
 class FilterIncludeAction(TargetFilter):
 	def __init__(self, actionType):
@@ -271,11 +272,11 @@ class FilterIncludeAction(TargetFilter):
 	def configure(self, callback):
 		top = super().configure(callback)
 		
-		Label(top, text="Action type:").pack(side=TOP, anchor=W)
+		ttk.Label(top, text="Action type:").pack(side=tk.TOP, anchor=tk.W)
 		
-		self.varActionType = StringVar()
-		Radiobutton(top, text="Nation Founding (excluding refounding)", variable=self.varActionType, value="founding").pack(anchor=W)
-		Radiobutton(top, text="Nation Refounding", variable=self.varActionType, value="refounding").pack(anchor=W)
+		self.varActionType = tk.StringVar()
+		ttk.Radiobutton(top, text="Nation Founding (excluding refounding)", variable=self.varActionType, value="founding").pack(anchor=tk.W)
+		ttk.Radiobutton(top, text="Nation Refounding", variable=self.varActionType, value="refounding").pack(anchor=tk.W)
 
 class FilterExcludeCategory(TargetFilterInvertible):
 	def __init__(self, categories, inverted):
@@ -330,19 +331,19 @@ class FilterExcludeCategory(TargetFilterInvertible):
 	def configure(self, callback):
 		top = super().configure(callback)
 		
-		Label(top, text="Exclude the following nation categories:").pack(side=TOP, anchor=W)
+		ttk.Label(top, text="Exclude the following nation categories:").pack(side=tk.TOP, anchor=tk.W)
 		
 		self.varCategories = []
 		
 		def addCategory(master, name):
-			var = [name, IntVar()]
-			cb = Checkbutton(master, text=name, variable=var[1])
-			cb.pack(side=TOP, anchor=W)
+			var = [name, tk.IntVar()]
+			cb = ttk.Checkbutton(master, text=name, variable=var[1])
+			cb.pack(side=tk.TOP, anchor=tk.W)
 			self.varCategories.append(var)
 		
-		threeCols = Frame(top)
+		threeCols = ttk.Frame(top)
 		
-		col1 = Frame(threeCols)
+		col1 = ttk.Frame(threeCols)
 		addCategory(col1, "Anarchy")
 		addCategory(col1, "Authoritarian Democracy")
 		addCategory(col1, "Benevolent Dictatorship")
@@ -353,9 +354,9 @@ class FilterExcludeCategory(TargetFilterInvertible):
 		addCategory(col1, "Conservative Democracy")
 		addCategory(col1, "Corporate Bordello")
 		addCategory(col1, "Corporate Police State")
-		col1.pack(side=LEFT)
+		col1.pack(side=tk.LEFT)
 		
-		col2 = Frame(threeCols)
+		col2 = ttk.Frame(threeCols)
 		addCategory(col2, "Corrupt Dictatorship")
 		addCategory(col2, "Democratic Socialists")
 		addCategory(col2, "Father Knows Best State")
@@ -365,9 +366,9 @@ class FilterExcludeCategory(TargetFilterInvertible):
 		addCategory(col2, "Iron Fist Socialists")
 		addCategory(col2, "Left-Leaning College State")
 		addCategory(col2, "Left-wing Utopia")
-		col2.pack(side=LEFT)
+		col2.pack(side=tk.LEFT)
 		
-		col3 = Frame(threeCols)
+		col3 = ttk.Frame(threeCols)
 		addCategory(col3, "Liberal Democratic Socialists")
 		addCategory(col3, "Libertarian Police State")
 		addCategory(col3, "Moralistic Democracy")
@@ -377,9 +378,9 @@ class FilterExcludeCategory(TargetFilterInvertible):
 		addCategory(col3, "Right-wing Utopia")
 		addCategory(col3, "Scandinavian Liberal Paradise")
 		addCategory(col3, "Tyranny by Majority")
-		col3.pack(side=LEFT)
+		col3.pack(side=tk.LEFT)
 		
-		threeCols.pack(side=TOP)
+		threeCols.pack(side=tk.TOP)
 
 isTelegramming = False
 
@@ -478,16 +479,16 @@ def telegramThread():
 	isTelegramming = False
 	
 	log(INFO, "Stopped telegramming.")
-	btnStart.config(state=NORMAL)
-	btnStop.config(state=DISABLED)
+	btnStart.config(state=tk.NORMAL)
+	btnStop.config(state=tk.DISABLED)
 
 def fnStart():
 	global isTelegramming
 	
 	log(INFO, "Starting telegramming.")
 	isTelegramming = True
-	btnStart.config(state=DISABLED)
-	btnStop.config(state=NORMAL)
+	btnStart.config(state=tk.DISABLED)
+	btnStop.config(state=tk.NORMAL)
 	
 	thread = threading.Thread(target=telegramThread)
 	thread.daemon = True
@@ -508,30 +509,30 @@ def fnStop():
 
 def fnFilterAddCallback(theFilter):
 	listFilters.append(theFilter)
-	lbFilters.insert(END, theFilter)
+	lbFilters.insert(tk.END, theFilter)
 
 def fnFilterAdd():
-	top = Toplevel()
+	top = tk.Toplevel()
 	top.wm_title("Select Filter Type")
 	
-	varFilterMode = StringVar()
+	varFilterMode = tk.StringVar()
 	varFilterMode.set("")
-	optFilterMode = OptionMenu(top, varFilterMode, "", "", "Include", "Exclude")
-	optFilterMode.pack(side=TOP, fill=X)
+	optFilterMode = ttk.OptionMenu(top, varFilterMode, "", "", "Include", "Exclude")
+	optFilterMode.pack(side=tk.TOP, fill=tk.X)
 	
-	varFilterType = StringVar()
+	varFilterType = tk.StringVar()
 	varFilterType.set("")
-	optFilterType = OptionMenu(top, varFilterType, "", "")
-	optFilterType.config(state=DISABLED)
-	optFilterType.pack(side=TOP, fill=X)
+	optFilterType = ttk.OptionMenu(top, varFilterType, "", "")
+	optFilterType.config(state=tk.DISABLED)
+	optFilterType.pack(side=tk.TOP, fill=tk.X)
 	
 	def fnChangeFilterMode(*args):
-		optFilterType["menu"].delete(0, END)
+		optFilterType["menu"].delete(0, tk.END)
 		varFilterType.set("")
 		if varFilterMode.get() == "":
-			optFilterType.config(state=DISABLED)
+			optFilterType.config(state=tk.DISABLED)
 		else:
-			optFilterType.config(state=NORMAL)
+			optFilterType.config(state=tk.NORMAL)
 			if varFilterMode.get() == "Include":
 				optFilterType["menu"].add_command(label="By Name", command=tkinter._setit(varFilterType, "By Name"))
 				optFilterType["menu"].add_command(label="By Action", command=tkinter._setit(varFilterType, "By Action"))
@@ -540,8 +541,8 @@ def fnFilterAdd():
 	
 	varFilterMode.trace("w", fnChangeFilterMode)
 	
-	frmButtons = Frame(top)
-	frmButtons.pack(side=BOTTOM)
+	frmButtons = ttk.Frame(top)
+	frmButtons.pack(side=tk.BOTTOM)
 	
 	def fnConfirm():
 		theFilter = None
@@ -555,14 +556,14 @@ def fnFilterAdd():
 		
 		top.destroy()
 	
-	Button(frmButtons, text="OK", command=fnConfirm).pack(side=LEFT)
-	Button(frmButtons, text="Cancel", command=top.destroy).pack(side=LEFT)
+	ttk.Button(frmButtons, text="OK", command=fnConfirm).pack(side=tk.LEFT)
+	ttk.Button(frmButtons, text="Cancel", command=top.destroy).pack(side=tk.LEFT)
 	
 	_set_transient(top, root)
 
 # ============================= GUI LAYOUT =============================
 
-root = Tk()
+root = tk.Tk()
 root.wm_title("pyNSrecruit")
 
 # themes = Style().theme_names()
@@ -570,9 +571,9 @@ root.wm_title("pyNSrecruit")
 
 # ------------------------------ MENUBAR ------------------------------
 
-menubar = Menu(root)
+menubar = tk.Menu(root)
 
-menuFile = Menu(menubar, tearoff=0)
+menuFile = tk.Menu(menubar, tearoff=0)
 
 def fnMenuSave():
 	filename = tkinter.filedialog.asksaveasfilename(parent=root)
@@ -623,7 +624,7 @@ def fnMenuLoad():
 				return
 			
 			# Clear the campaign data.
-			lbCampaigns.delete(0, END)
+			lbCampaigns.delete(0, tk.END)
 			listCampaigns[:] = []
 			
 			for campaignDict in data["campaigns"]:
@@ -642,10 +643,10 @@ def fnMenuLoad():
 					campaign.filters.append(theFilter)
 				
 				listCampaigns.append(campaign)
-				lbCampaigns.insert(END, campaign)
+				lbCampaigns.insert(tk.END, campaign)
 				
 				if not campaign.enabled:
-					lbCampaigns.itemconfig(END, fg="#AAAAAA")
+					lbCampaigns.itemconfig(tk.END, fg="#AAAAAA")
 			
 			log(INFO, "Loaded session data.")
 		except Exception as e:
@@ -657,34 +658,34 @@ menuFile.add_separator()
 menuFile.add_command(label="Quit", command=root.quit)
 menubar.add_cascade(label="File", menu=menuFile)
 
-menuHelp = Menu(menubar, tearoff=0)
+menuHelp = tk.Menu(menubar, tearoff=0)
 def fnMenuHelp():
 	webbrowser.open("https://github.com/RunasSudo/pyNSrecruit/wiki")
 menuHelp.add_command(label="Online Help", command=fnMenuHelp)
-menuHelp.add_command(label="About", state=DISABLED)
+menuHelp.add_command(label="About", state=tk.DISABLED)
 menubar.add_cascade(label="Help", menu=menuHelp)
 
 root.config(menu=menubar)
 
-frmTop = Frame(root)
-frmTop.pack(side=TOP, fill=BOTH, expand=YES)
+frmTop = ttk.Frame(root)
+frmTop.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
 
-frmLeft = Frame(frmTop)
-frmLeft.pack(side=LEFT, fill=BOTH)
+frmLeft = ttk.Frame(frmTop)
+frmLeft.pack(side=tk.LEFT, fill=tk.BOTH)
 
 # --------------------------- CAMPAIGNS BOX ---------------------------
 
-frmCampaigns = Frame(frmLeft)
-frmCampaigns.pack(side=TOP, fill=BOTH, expand=YES)
+frmCampaigns = ttk.Frame(frmLeft)
+frmCampaigns.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
 
-sbCampaigns = Scrollbar(frmCampaigns)
-sbCampaigns.pack(side=RIGHT, fill=Y)
-lbCampaigns = Listbox(frmCampaigns, yscrollcommand=sbCampaigns.set)
-lbCampaigns.pack(side=LEFT, fill=BOTH, expand=YES)
+sbCampaigns = ttk.Scrollbar(frmCampaigns)
+sbCampaigns.pack(side=tk.RIGHT, fill=tk.Y)
+lbCampaigns = tk.Listbox(frmCampaigns, yscrollcommand=sbCampaigns.set)
+lbCampaigns.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
 sbCampaigns.config(command=lbCampaigns.yview)
 
-frmCampaignsSL = Frame(frmLeft)
-frmCampaignsSL.pack(side=BOTTOM)
+frmCampaignsSL = ttk.Frame(frmLeft)
+frmCampaignsSL.pack(side=tk.BOTTOM)
 
 def fnSave():
 	campaignName = tkinter.simpledialog.askstring("Save Campaign", "Campaign Name:", parent=root)
@@ -698,11 +699,11 @@ def fnSave():
 	
 	campaign = Campaign(campaignName)
 	
-	campaign.clientKey = txtClientKey.get(1.0, END).rstrip()
-	campaign.telegramID = txtTelegramID.get(1.0, END).rstrip()
-	campaign.secretKey = txtSecretKey.get(1.0, END).rstrip()
+	campaign.clientKey = txtClientKey.get(1.0, tk.END).rstrip()
+	campaign.telegramID = txtTelegramID.get(1.0, tk.END).rstrip()
+	campaign.secretKey = txtSecretKey.get(1.0, tk.END).rstrip()
 	campaign.sendingRate = varSendingRate.get()
-	campaign.customRate = txtCustomRate.get(1.0, END).rstrip()
+	campaign.customRate = txtCustomRate.get(1.0, tk.END).rstrip()
 	campaign.enabled = varCampaignEnabled.get()
 	campaign.dryRun = varCampaignDryRun.get()
 	
@@ -710,43 +711,43 @@ def fnSave():
 		campaign.filters.append(theFilter.makeCopy())
 	
 	listCampaigns.append(campaign)
-	lbCampaigns.insert(END, campaign)
+	lbCampaigns.insert(tk.END, campaign)
 	
 	if not campaign.enabled:
-		lbCampaigns.itemconfig(END, fg="#AAAAAA")
+		lbCampaigns.itemconfig(tk.END, fg="#AAAAAA")
 
-btnSave = Button(frmCampaignsSL, text="Save", command=fnSave)
-btnSave.pack(side=LEFT)
+btnSave = ttk.Button(frmCampaignsSL, text="Save", command=fnSave)
+btnSave.pack(side=tk.LEFT)
 
 def fnLoad(*args):
 	if len(lbCampaigns.curselection()) > 0:
 		selection = lbCampaigns.curselection()[0]
 		
 		# Clear the campaign data.
-		lbFilters.delete(0, END)
+		lbFilters.delete(0, tk.END)
 		listFilters[:] = []
 		
 		campaign = listCampaigns[selection]
 		
-		txtClientKey.delete(1.0, END)
-		txtClientKey.insert(END, campaign.clientKey)
-		txtTelegramID.delete(1.0, END)
-		txtTelegramID.insert(END, campaign.telegramID)
-		txtSecretKey.delete(1.0, END)
-		txtSecretKey.insert(END, campaign.secretKey)
+		txtClientKey.delete(1.0, tk.END)
+		txtClientKey.insert(tk.END, campaign.clientKey)
+		txtTelegramID.delete(1.0, tk.END)
+		txtTelegramID.insert(tk.END, campaign.telegramID)
+		txtSecretKey.delete(1.0, tk.END)
+		txtSecretKey.insert(tk.END, campaign.secretKey)
 		varSendingRate.set(campaign.sendingRate)
-		txtCustomRate.delete(1.0, END)
-		txtCustomRate.insert(END, campaign.customRate)
+		txtCustomRate.delete(1.0, tk.END)
+		txtCustomRate.insert(tk.END, campaign.customRate)
 		varCampaignEnabled.set(campaign.enabled)
 		varCampaignDryRun.set(campaign.dryRun)
 		
 		for theFilter in campaign.filters:
 			copyFilter = theFilter.makeCopy()
-			lbFilters.insert(END, copyFilter)
+			lbFilters.insert(tk.END, copyFilter)
 			listFilters.append(copyFilter)
 
-btnLoad = Button(frmCampaignsSL, text="Load", command=fnLoad)
-btnLoad.pack(side=LEFT)
+btnLoad = ttk.Button(frmCampaignsSL, text="Load", command=fnLoad)
+btnLoad.pack(side=tk.LEFT)
 lbCampaigns.bind("<Double-Button-1>", fnLoad)
 
 def fnDelete():
@@ -755,25 +756,25 @@ def fnDelete():
 		lbCampaigns.delete(selection)
 		listCampaigns.pop(selection)
 
-btnDelete = Button(frmCampaignsSL, text="Delete", command=fnDelete)
-btnDelete.pack(side=LEFT)
+btnDelete = ttk.Button(frmCampaignsSL, text="Delete", command=fnDelete)
+btnDelete.pack(side=tk.LEFT)
 
 # -------------------------- CAMPAIGN DETAILS --------------------------
 
-frmDetails = Frame(frmTop, height=500, width=500)
+frmDetails = ttk.Frame(frmTop, height=500, width=500)
 frmDetails.pack_propagate(0)
-frmDetails.pack(side=RIGHT, fill=BOTH)
+frmDetails.pack(side=tk.RIGHT, fill=tk.BOTH)
 
 #                            CAMPAIGN FILTERS                           
 
-frmFilterTargets = LabelFrame(frmDetails, text="Filter Targets")
-frmFilterTargets.pack(side=TOP, fill=X)
+frmFilterTargets = ttk.LabelFrame(frmDetails, text="Filter Targets")
+frmFilterTargets.pack(side=tk.TOP, fill=tk.X)
 
-frmFilterControls = Frame(frmFilterTargets)
-frmFilterControls.pack(side=RIGHT)
+frmFilterControls = ttk.Frame(frmFilterTargets)
+frmFilterControls.pack(side=tk.RIGHT)
 
-btnFilterAdd = Button(frmFilterControls, text="+", width=2, command=fnFilterAdd)
-btnFilterAdd.pack(side=TOP)
+btnFilterAdd = ttk.Button(frmFilterControls, text="+", width=2, command=fnFilterAdd)
+btnFilterAdd.pack(side=tk.TOP)
 
 def fnFilterRemove():
 	if len(lbFilters.curselection()) > 0:
@@ -781,37 +782,37 @@ def fnFilterRemove():
 		lbFilters.delete(selection)
 		listFilters.pop(selection)
 
-btnFilterRemove = Button(frmFilterControls, text="−", width=2, command=fnFilterRemove)
-btnFilterRemove.pack(side=TOP)
+btnFilterRemove = ttk.Button(frmFilterControls, text="−", width=2, command=fnFilterRemove)
+btnFilterRemove.pack(side=tk.TOP)
 
 def fnFilterShiftUp():
 	lbShift(lbFilters, listFilters, -1)
-btnFilterShiftUp = Button(frmFilterControls, text="▲", width=2, command=fnFilterShiftUp)
-btnFilterShiftUp.pack(side=TOP)
+btnFilterShiftUp = ttk.Button(frmFilterControls, text="▲", width=2, command=fnFilterShiftUp)
+btnFilterShiftUp.pack(side=tk.TOP)
 
 def fnFilterShiftDown():
 	lbShift(lbFilters, listFilters, 1)
-btnFilterShiftDown = Button(frmFilterControls, text="▼", width=2, command=fnFilterShiftDown)
-btnFilterShiftDown.pack(side=TOP)
+btnFilterShiftDown = ttk.Button(frmFilterControls, text="▼", width=2, command=fnFilterShiftDown)
+btnFilterShiftDown.pack(side=tk.TOP)
 
-sbXFilters = Scrollbar(frmFilterTargets, orient=HORIZONTAL)
-sbXFilters.pack(side=BOTTOM, fill=X)
-sbYFilters = Scrollbar(frmFilterTargets, orient=VERTICAL)
-sbYFilters.pack(side=RIGHT, fill=Y)
-lbFilters = Listbox(frmFilterTargets, xscrollcommand=sbXFilters.set, yscrollcommand=sbYFilters.set)
-lbFilters.pack(side=LEFT, fill=BOTH, expand=YES)
+sbXFilters = ttk.Scrollbar(frmFilterTargets, orient=tk.HORIZONTAL)
+sbXFilters.pack(side=tk.BOTTOM, fill=tk.X)
+sbYFilters = ttk.Scrollbar(frmFilterTargets, orient=tk.VERTICAL)
+sbYFilters.pack(side=tk.RIGHT, fill=tk.Y)
+lbFilters = tk.Listbox(frmFilterTargets, xscrollcommand=sbXFilters.set, yscrollcommand=sbYFilters.set)
+lbFilters.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
 sbXFilters.config(command=lbFilters.xview)
 sbYFilters.config(command=lbFilters.yview)
 
 #                             OTHER SETTINGS                            
 
-frmClientOptions = LabelFrame(frmDetails, text="Client Options")
-frmClientOptions.pack(side=TOP, fill=X)
+frmClientOptions = ttk.LabelFrame(frmDetails, text="Client Options")
+frmClientOptions.pack(side=tk.TOP, fill=tk.X)
 
 txtClientKey = makeLabelledText(frmClientOptions, "Client Key:")
 
-frmTelegramSettings = LabelFrame(frmDetails, text="Telegram Details")
-frmTelegramSettings.pack(side=TOP, fill=X)
+frmTelegramSettings = ttk.LabelFrame(frmDetails, text="Telegram Details")
+frmTelegramSettings.pack(side=tk.TOP, fill=tk.X)
 
 txtTelegramID = makeLabelledText(frmTelegramSettings, "Telegram ID:")
 txtSecretKey = makeLabelledText(frmTelegramSettings, "Secret Key:")
@@ -822,64 +823,64 @@ def fnGetFromURL():
 		params = urllib.parse.parse_qs(urllib.parse.urlparse(apiURL).query)
 		
 		if "client" in params and params["client"][0] != "YOUR_API_CLIENT_KEY":
-			txtClientKey.delete(1.0, END)
-			txtClientKey.insert(END, params["client"][0])
+			txtClientKey.delete(1.0, tk.END)
+			txtClientKey.insert(tk.END, params["client"][0])
 		
 		if "tgid" in params:
-			txtTelegramID.delete(1.0, END)
-			txtTelegramID.insert(END, params["tgid"][0])
+			txtTelegramID.delete(1.0, tk.END)
+			txtTelegramID.insert(tk.END, params["tgid"][0])
 		
 		if "key" in params:
-			txtSecretKey.delete(1.0, END)
-			txtSecretKey.insert(END, params["key"][0])
+			txtSecretKey.delete(1.0, tk.END)
+			txtSecretKey.insert(tk.END, params["key"][0])
 
-btnGetFromURL = Button(frmTelegramSettings, text="Get Settings from URL", command=fnGetFromURL)
-btnGetFromURL.pack(side=TOP, fill=X)
+btnGetFromURL = ttk.Button(frmTelegramSettings, text="Get Settings from URL", command=fnGetFromURL)
+btnGetFromURL.pack(side=tk.TOP, fill=tk.X)
 
-frmSendingRate = LabelFrame(frmDetails, text="Sending Rate")
-frmSendingRate.pack(side=TOP, fill=X)
+frmSendingRate = ttk.LabelFrame(frmDetails, text="Sending Rate")
+frmSendingRate.pack(side=tk.TOP, fill=tk.X)
 
-varSendingRate = IntVar()
+varSendingRate = tk.IntVar()
 varSendingRate.set(180)
-Radiobutton(frmSendingRate, text="30s (Non-Recruitment Telegram)", variable=varSendingRate, value=30).pack(side=TOP, anchor=W)
-Radiobutton(frmSendingRate, text="180s (Recruitment Telegram)", variable=varSendingRate, value=180).pack(side=TOP, anchor=W)
+ttk.Radiobutton(frmSendingRate, text="30s (Non-Recruitment Telegram)", variable=varSendingRate, value=30).pack(side=tk.TOP, anchor=tk.W)
+ttk.Radiobutton(frmSendingRate, text="180s (Recruitment Telegram)", variable=varSendingRate, value=180).pack(side=tk.TOP, anchor=tk.W)
 
-frmCustomRate = Frame(frmSendingRate)
-frmCustomRate.pack(side=TOP, anchor=W)
+frmCustomRate = ttk.Frame(frmSendingRate)
+frmCustomRate.pack(side=tk.TOP, anchor=tk.W)
 
-Radiobutton(frmCustomRate, text="Custom Rate:", variable=varSendingRate, value=0).pack(side=LEFT)
+ttk.Radiobutton(frmCustomRate, text="Custom Rate:", variable=varSendingRate, value=0).pack(side=tk.LEFT)
 
-txtCustomRate = Text(frmCustomRate, height=1, width=3)
-txtCustomRate.pack(side=LEFT)
+txtCustomRate = tk.Text(frmCustomRate, height=1, width=3)
+txtCustomRate.pack(side=tk.LEFT)
 
-Label(frmCustomRate, text="s (This may violate the API Terms of Service!)").pack(side=LEFT)
+ttk.Label(frmCustomRate, text="s (This may violate the API Terms of Service!)").pack(side=tk.LEFT)
 
-varCampaignEnabled = IntVar()
+varCampaignEnabled = tk.IntVar()
 varCampaignEnabled.set(1)
-Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=TOP, anchor=W)
+ttk.Checkbutton(frmDetails, text="Campaign Enabled", variable=varCampaignEnabled).pack(side=tk.TOP, anchor=tk.W)
 
-varCampaignDryRun = IntVar()
+varCampaignDryRun = tk.IntVar()
 varCampaignDryRun.set(0)
-Checkbutton(frmDetails, text="Dry Run (Don't actually send any telegrams)", variable=varCampaignDryRun).pack(side=TOP, anchor=W)
+ttk.Checkbutton(frmDetails, text="Dry Run (Don't actually send any telegrams)", variable=varCampaignDryRun).pack(side=tk.TOP, anchor=tk.W)
 
 # ---------------------------- BOTTOM PANEL ----------------------------
 
-frmBottom = Frame(root)
-frmBottom.pack(side=BOTTOM, fill=X)
+frmBottom = ttk.Frame(root)
+frmBottom.pack(side=tk.BOTTOM, fill=tk.X)
 
-frmControls = Frame(frmBottom)
-frmControls.pack(side=LEFT)
+frmControls = ttk.Frame(frmBottom)
+frmControls.pack(side=tk.LEFT)
 
-btnStart = Button(frmControls, text="Start", command=fnStart)
-btnStart.pack(side=TOP)
+btnStart = ttk.Button(frmControls, text="Start", command=fnStart)
+btnStart.pack(side=tk.TOP)
 
-btnStop = Button(frmControls, text="Stop", command=fnStop, state=DISABLED)
-btnStop.pack(side=TOP)
+btnStop = ttk.Button(frmControls, text="Stop", command=fnStop, state=tk.DISABLED)
+btnStop.pack(side=tk.TOP)
 
-frmLog = Frame(frmBottom)
-frmLog.pack(side=RIGHT, fill=X, expand=YES)
+frmLog = ttk.Frame(frmBottom)
+frmLog.pack(side=tk.RIGHT, fill=tk.X, expand=tk.YES)
 
-txtLog = ScrolledText(frmLog, height=5, state=DISABLED)
-txtLog.pack(side=LEFT, fill=X, expand=YES)
+txtLog = tkinter.scrolledtext.ScrolledText(frmLog, height=5, state=tk.DISABLED)
+txtLog.pack(side=tk.LEFT, fill=tk.X, expand=tk.YES)
 
 root.mainloop()
