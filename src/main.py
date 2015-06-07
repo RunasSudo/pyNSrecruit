@@ -22,7 +22,6 @@ import tkinter.simpledialog
 from tkinter.scrolledtext import ScrolledText
 
 import collections
-import copy
 import datetime
 import json
 import time
@@ -132,13 +131,13 @@ class TargetFilter:
 	def filterType(self):
 		return 0
 	
-	def toDict(self):
-		return {}
+	@staticmethod
 	def fromDict(data):
 		return TargetFilter()
+	def toDict(self):
+		return {}
 	
-	def getTypeString(self):
-		return "TargetFilter"
+	@staticmethod
 	def getTypeFromString(typeString):
 		if typeString == "FilterIncludeName":
 			return FilterIncludeName
@@ -148,6 +147,8 @@ class TargetFilter:
 			return FilterExcludeCategory
 		log(WARN, "Unknown filter type {0}.".format(typeString))
 		return TargetFilter
+	def getTypeString(self):
+		return "TargetFilter"
 	
 	def makeCopy(self):
 		#Jump through hoops to avoid referencing filters of other campaigns
@@ -196,12 +197,13 @@ class FilterIncludeName(TargetFilter):
 	def getNations(self):
 		return self.names
 	
+	@staticmethod
+	def fromDict(data):
+		return FilterIncludeName(data["names"])
 	def toDict(self):
 		return {
 			"names": self.names
 		}
-	def fromDict(data):
-		return FilterIncludeName(data["names"])
 	def getTypeString(self):
 		return "FilterIncludeName"
 	
@@ -253,12 +255,13 @@ class FilterIncludeAction(TargetFilter):
 		
 		return []
 	
+	@staticmethod
+	def fromDict(data):
+		return FilterIncludeAction(data["action"])
 	def toDict(self):
 		return {
 			"action": self.actionType
 		}
-	def fromDict(data):
-		return FilterIncludeAction(data["action"])
 	def getTypeString(self):
 		return "FilterIncludeAction"
 	
@@ -305,13 +308,14 @@ class FilterExcludeCategory(TargetFilterInvertible):
 		
 		return True #Be safe!
 	
+	@staticmethod
+	def fromDict(data):
+		return FilterExcludeCategory(data["categories"], data["inverted"])
 	def toDict(self):
 		return {
 			"categories": self.categories,
 			"inverted": self.inverted
 		}
-	def fromDict(data):
-		return FilterExcludeCategory(data["categories"], data["inverted"])
 	def getTypeString(self):
 		return "FilterExcludeCategory"
 	
