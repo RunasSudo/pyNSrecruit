@@ -62,9 +62,9 @@ def makeLabelledText(master, label):
 # Shamelessly ripped from the simpledialog source code. Centres a window.
 # Licensed under the PSF LICENSE AGREEMENT FOR PYTHON 3.4.2
 def _set_transient(widget, master, relx=0.5, rely=0.3):
-	widget.withdraw() # Remain invisible while we figure out the geometry
+	widget.withdraw()  # Remain invisible while we figure out the geometry
 	widget.transient(master)
-	widget.update_idletasks() # Actualize geometry information
+	widget.update_idletasks()  # Actualize geometry information
 	if master.winfo_ismapped():
 		m_width = master.winfo_width()
 		m_height = master.winfo_height()
@@ -78,16 +78,16 @@ def _set_transient(widget, master, relx=0.5, rely=0.3):
 	w_height = widget.winfo_reqheight()
 	x = m_x + (m_width - w_width) * relx
 	y = m_y + (m_height - w_height) * rely
-	if x+w_width > master.winfo_screenwidth():
+	if x + w_width > master.winfo_screenwidth():
 		x = master.winfo_screenwidth() - w_width
 	elif x < 0:
 		x = 0
-	if y+w_height > master.winfo_screenheight():
+	if y + w_height > master.winfo_screenheight():
 		y = master.winfo_screenheight() - w_height
 	elif y < 0:
 		y = 0
 	widget.geometry("+%d+%d" % (x, y))
-	widget.deiconify() # Become visible at the desired location
+	widget.deiconify()  # Become visible at the desired location
 
 #                                LOGGING                               
 
@@ -101,7 +101,7 @@ FTAL = (5, "FTAL")
 def log(level, text):
 	formatted = "{0:%Y-%m-%d %H:%M:%S} [{1}] {2}".format(datetime.datetime.now(), level[1], text)
 	print(formatted)
-	txtLog.config(state=NORMAL) #Why would you design a library like this, Ousterhout? WHY!
+	txtLog.config(state=NORMAL)  # Why would you design a library like this, Ousterhout? WHY!
 	txtLog.insert(END, formatted + "\n")
 	txtLog.config(state=DISABLED)
 	txtLog.yview(END)
@@ -151,8 +151,8 @@ class TargetFilter:
 		return "TargetFilter"
 	
 	def makeCopy(self):
-		#Jump through hoops to avoid referencing filters of other campaigns
-		#copy.deepcopy = infinite recursion :(
+		# Jump through hoops to avoid referencing filters of other campaigns
+		# copy.deepcopy = infinite recursion :(
 		return TargetFilter.getTypeFromString(self.getTypeString()).fromDict(self.toDict())
 	
 	def configureCallback(self):
@@ -306,7 +306,7 @@ class FilterExcludeCategory(TargetFilterInvertible):
 			log(ERRR, "Unable to load data for {1}. Check the log.\n{0}".format(repr(e), nation))
 			print(traceback.format_exc())
 		
-		return True #Be safe!
+		return True  # Be safe!
 	
 	@staticmethod
 	def fromDict(data):
@@ -388,16 +388,16 @@ listCampaigns = []
 listFilters = []
 
 def telegramThread():
-	global isTelegramming #What is Python even?
+	global isTelegramming  # What is Python even?
 	
 	log(INFO, "Started telegramming.")
 	
-	telegramHistory = collections.deque(maxlen=100) #TODO: Make this configurable.
+	telegramHistory = collections.deque(maxlen=100)  # TODO: Make this configurable.
 	
 	try:
 		while isTelegramming:
 			targetNationsData = []
-			#Compute INCLUDE targets
+			# Compute INCLUDE targets
 			for campaign in listCampaigns:
 				if campaign.enabled:
 					for theFilter in campaign.filters:
@@ -406,7 +406,7 @@ def telegramThread():
 							for nation in nations:
 								targetNationsData.append((campaign, nation))
 			
-			nationsTelegrammed = 0 #This round
+			nationsTelegrammed = 0  # This round
 			for nationData in targetNationsData:
 				campaign = nationData[0]
 				nation = nationData[1]
@@ -435,7 +435,7 @@ def telegramThread():
 				if campaign.dryRun:
 					log(INFO, "Dry-run mode enabled, so not doing anything.")
 				else:
-					#Telegram the nation
+					# Telegram the nation
 					try:
 						query = urllib.parse.urlencode({
 							"client": campaign.clientKey,
@@ -463,7 +463,7 @@ def telegramThread():
 					sendingRate = 0
 				
 				log(INFO, "Waiting {0} seconds.".format(sendingRate))
-				time.sleep(sendingRate + 2) #The rate is a lie!
+				time.sleep(sendingRate + 2)  # The rate is a lie!
 				
 				break
 			
@@ -498,9 +498,9 @@ def fnStop():
 	
 	log(INFO, "Stopping telegramming. Telegramming will stop when waiting finishes.")
 	
-	isTelegramming = False #Signal to the telegram thread that it should stop.
+	isTelegramming = False  # Signal to the telegram thread that it should stop.
 	
-	#Wait for stop.
+	# Wait for stop.
 
 # ========================= GUI CHILD WINDOWS =========================
 
@@ -565,8 +565,8 @@ def fnFilterAdd():
 root = Tk()
 root.wm_title("pyNSrecruit")
 
-#themes = Style().theme_names()
-#Style().theme_use("alt")
+# themes = Style().theme_names()
+# Style().theme_use("alt")
 
 # ------------------------------ MENUBAR ------------------------------
 
@@ -622,7 +622,7 @@ def fnMenuLoad():
 				log(ERRR, "Unsupported version number {0}.".format(data.version))
 				return
 			
-			#Clear the campaign data.
+			# Clear the campaign data.
 			lbCampaigns.delete(0, END)
 			listCampaigns[:] = []
 			
@@ -689,7 +689,7 @@ frmCampaignsSL.pack(side=BOTTOM)
 def fnSave():
 	campaignName = tkinter.simpledialog.askstring("Save Campaign", "Campaign Name:", parent=root)
 	
-	#Delete the campaign if it already exists
+	# Delete the campaign if it already exists
 	for i in range(0, len(listCampaigns)):
 		if listCampaigns[i].name == campaignName:
 			listCampaigns.pop(i)
@@ -722,7 +722,7 @@ def fnLoad(*args):
 	if len(lbCampaigns.curselection()) > 0:
 		selection = lbCampaigns.curselection()[0]
 		
-		#Clear the campaign data.
+		# Clear the campaign data.
 		lbFilters.delete(0, END)
 		listFilters[:] = []
 		
