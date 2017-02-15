@@ -1,6 +1,6 @@
 #!/usr/bin/python3 -u
 #    pyNSrecruit
-#    Copyright (C) 2015  RunasSudo (Yingtong Li)
+#    Copyright © 2015, 2017  RunasSudo (Yingtong Li)
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # If you modify pyNSrecruit, please consider modifying one (or both) of the following lines to show this.
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 USERAGENT = "pyNSrecruit/{0} (South Jarvis)".format(VERSION)
 
 import tkinter as tk
@@ -447,7 +447,7 @@ def telegramThread():
 							"to": nation
 						})
 						
-						req = urllib.request.Request("http://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&{0}".format(query))
+						req = urllib.request.Request("https://www.nationstates.net/cgi-bin/api.cgi?a=sendTG&{0}".format(query))
 						req.add_header("User-Agent", USERAGENT)
 						
 						resp = urllib.request.urlopen(req)
