@@ -16,12 +16,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # If you modify pyNSrecruit, please consider modifying one (or both) of the following lines to show this.
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 USERAGENT = "pyNSrecruit/{0} (South Jarvis)".format(VERSION)
 
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog
+import tkinter.messagebox
 import tkinter.simpledialog
 import tkinter.scrolledtext
 
@@ -486,6 +487,11 @@ def telegramThread():
 
 def fnStart():
 	global isTelegramming
+	
+	if len(listCampaigns) == 0:
+		log(ERRR, "Not telegramming because no campaigns saved.")
+		tkinter.messagebox.showerror("No campaigns saved", "You cannot start telegramming because you have not saved any campaigns yet. Once you have entered in the details, please ensure you have clicked the 'Save' button at the bottom right to save your details to a campaign.", parent=root)
+		return
 	
 	log(INFO, "Starting telegramming.")
 	isTelegramming = True
